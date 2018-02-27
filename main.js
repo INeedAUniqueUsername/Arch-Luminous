@@ -1,5 +1,6 @@
 const Discord = require('discord.js');
-const ME = new Discord.Client();
+const me = new Discord.Client();
+const core = require('./core.js');
 const CONFIG = require('../config.json');
 
 const cerebrum = require('./cerebrum.js');
@@ -7,8 +8,6 @@ const rpg = require('./rpg.js');
 const COMMAND_MODULES = [cerebrum, rpg];
 
 const version = '0X';
-
-const core = require('./core.js');
 let asleep = false;
 const restart = function() {
     asleep = true;  //This instance stops responding to messages
@@ -59,13 +58,13 @@ const run = function(message, input, command_module) {
     } else {
         message.channel.send(core.tag(message.author.id) + ', unknown command `' + command + '`');
     }
-}
-ME.on('ready', function() {
+};
+me.on('ready', function() {
     console.log('Hello World!');
     cerebrum.ready();
     rpg.ready();
 });
-ME.on('message', function(message) {
+me.on('message', function(message) {
     if(asleep)
         return;
     if(message.author.id === CONFIG.meId)
@@ -113,6 +112,8 @@ ME.on('message', function(message) {
             } else {
                 message.channel.send(message.channel.send(core.tag(message.author.id) + ', your credentials, please?'));
             }
+        } else {
+            message.channel.send('You called? If you need help, say: ' + core.tag(CONFIG.meId) + ' help [command]');
         }
     } else if(cerebrum.respond(message)) {
         return;
@@ -125,4 +126,4 @@ ME.on('message', function(message) {
         }
     }
 });
-ME.login(CONFIG.token);
+me.login(CONFIG.token);
