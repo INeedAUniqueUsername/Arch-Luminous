@@ -84,7 +84,7 @@ ME.on('message', function(message) {
                 for(let name in module.commands) {
                     let command = prefix + name;
                     if(command.startsWith(criterion)) {
-                        reply += '\n`' + prefix + name + '`' + (module.help ? (': ' + (module.help[c] || 'no help available for this command')) : ': no help available for this module') /* + ': ' + module.help[c]*/;
+                        reply += '\n`' + prefix + name + '`' + (module.help ? (': ' + (module.help[c] || 'no help available for this command')) : ': no help available for this command\'s module') /* + ': ' + module.help[c]*/;
                     }
                 }
             }
@@ -95,7 +95,7 @@ ME.on('message', function(message) {
                 let module = COMMAND_MODULES[i];
                 let prefix = module.prefix;
                 for(let name in module.commands) {
-                    reply += '\n`' + prefix + name + '`' + (module.help ? (': ' + (module.help[c] || 'no help available for this command')) : ': no help available for this module') /* + ': ' + module.help[c]*/;
+                    reply += '\n`' + prefix + name + '`' + (module.help ? (': ' + (module.help[c] || 'no help available for this command')) : ': no help available for this command\'s module') /* + ': ' + module.help[c]*/;
                 }
             }
             message.channel.send(reply);
