@@ -1,47 +1,14 @@
 const core = require('./core.js');
+const items = require('./items.js');
 let inventory = {
     initialize: function(id) {
         //console.log('Initialize Inventory ID: ' + id);
         if(!inventory[id]) {
             inventory[id] = {
                 items: [
-                    {
-                        name: 'six-sided die',
-                        desc: 'a standard six-sided die',
-                        use: {
-                            roll: function() {
-                                return 'You roll a ' + this.roll();
-                            }
-                        },
-                        sides: [1, 2, 3, 4, 5, 6],
-                        roll: function() { return this.sides[Math.floor(Math.random() * this.sides.length)]; }
-                    }, {
-                        name: 'loaded six-sided die',
-                        desc: 'a standard six-sided die',
-                        use: {
-                            roll: function() {
-                                return 'You roll ' + this.roll();
-                            }
-                        },
-                        sides: [1, 2, 3, 4, 5, 6],
-                        odds: [1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6],
-                        roll: function() { return this.odds[Math.floor(Math.random() * this.odds.length)]; }
-                    }, {
-                        name: 'bundle of six-sided die',
-                        desc: 'a bundle of six standard six-sided die',
-                        use: {
-                            roll: function() {
-                                return 'You roll ' + this.roll();
-                            }
-                        },
-                        dice: {
-                            sides: [1, 2, 3, 4, 5, 6],
-                            roll: function() { return this.sides[Math.floor(Math.random() * this.sides.length)]; }
-                        },
-                        roll: function() {
-                            return this.dice.roll() + this.dice.roll() + this.dice.roll() + this.dice.roll() + this.dice.roll() + this.dice.roll();
-                        }
-                    }
+                    items.types.die_std(),
+                    items.types.die_loaded(),
+                    items.types.bundle_die_std()
                 ]
             };
         }
@@ -125,7 +92,6 @@ module.exports = {
             } else {
                 message.channel.send(core.tag(author) + ', item not found');
             }
-            
         }
     }
 }
