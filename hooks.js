@@ -28,7 +28,7 @@ module.exports = {
         hooks.push(hook);
     },
     match: function(predicate) {
-        for(let i = 0; i < hooks.length; i++) {
+        for(let i = hooks.length-1; i > -1; i--) {
             let hook = hooks[i];
             if(predicate(hook)) {
                 return hook;
@@ -39,7 +39,7 @@ module.exports = {
     intercept: function(message) {
         console.log('Processing hooks');
         //We return true to say that we intercept the message and that the parent should not process it any further
-        for(let i = 0; i < hooks.length; i++) {
+        for(let i = hooks.length-1; i > -1; i--) {
             let hook = hooks[i];
             console.log('Processing hook ' + i);
             //If we have a target ID, then we check if the author matches it
