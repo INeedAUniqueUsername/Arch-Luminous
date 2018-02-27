@@ -15,6 +15,49 @@ const restart = function() {
         process.exit(); //Doesn't seem to work for some reason
     });
 };
+const coreFunctions = {
+    about: function() {
+        message.channel.send('Created by ' + core.tag(CONFIG.archId) + '.\nGitHub: https://github.com/INeedAUniqueUsername/Arch-Luminous');
+    },
+    version: function() {
+        message.channel.send('My Version: `' + version + '`');
+    },
+    help: function() {
+        let criterion = parts[2] || '';
+        if(criterion) {
+            let reply = core.tag(CONFIG.meId) + ' Function Help';
+            for(let i = 0; i < COMMAND_MODULES.length; i++) {
+                let module = COMMAND_MODULES[i];
+                let prefix = module.prefix;
+                for(let name in module.commands) {
+                    let command = prefix + name;
+                    if(command.startsWith(criterion)) {
+                        reply += '\n`' + prefix + name + '`' + (module.help ? (': ' + (module.help[c] || 'no help available for this command')) : ': no help available for this command\'s module') /* + ': ' + module.help[c]*/;
+                    }
+                }
+            }
+            message.channel.send(reply);
+        } else {
+            let reply = core.tag(CONFIG.meId) + ' Function List';
+            for(let i = 0; i < COMMAND_MODULES.length; i++) {
+                let module = COMMAND_MODULES[i];
+                let prefix = module.prefix;
+                for(let name in module.commands) {
+                    reply += '\n`' + prefix + name + '`' + (module.help ? (': ' + (module.help[c] || 'no help available for this command')) : ': no help available for this command\'s module') /* + ': ' + module.help[c]*/;
+                }
+            }
+            message.channel.send(reply);
+        }
+    },
+    sd: function() {
+        if(message.author.id === CONFIG.archId) {
+            message.channel.send('Self destruct sequence activated.');
+            restart();
+        } else {
+            message.channel.send(message.channel.send(core.tag(message.author.id) + ', your credentials, please?'));
+        }
+    }
+}
 const run = function(message, input, command_module) {
     /*
     let active;
@@ -73,45 +116,9 @@ me.on('message', function(message) {
     console.log(input);
     let parts = input.split(' ').map(function(s) { return s.trim(); });
     if(parts[0] === core.tag(CONFIG.meId)) {
-        if(!parts[1]) {
-            message.channel.send('You called? If you need help, say: ' + core.tag(CONFIG.meId) + ' help [command]');
-        } else if(parts[1] === 'about') {
-            message.channel.send('Created by ' + core.tag(CONFIG.archId) + '.\nGitHub: https://github.com/INeedAUniqueUsername/Arch-Luminous');
-        } else if(parts[1] === 'version') {
-            message.channel.send('My Version: `' + version + '`');
-        } else if(parts[1] === 'help') {
-            let criterion = parts[2] || '';
-            if(criterion) {
-                let reply = core.tag(CONFIG.meId) + ' Function Help';
-                for(let i = 0; i < COMMAND_MODULES.length; i++) {
-                    let module = COMMAND_MODULES[i];
-                    let prefix = module.prefix;
-                    for(let name in module.commands) {
-                        let command = prefix + name;
-                        if(command.startsWith(criterion)) {
-                            reply += '\n`' + prefix + name + '`' + (module.help ? (': ' + (module.help[c] || 'no help available for this command')) : ': no help available for this command\'s module') /* + ': ' + module.help[c]*/;
-                        }
-                    }
-                }
-                message.channel.send(reply);
-            } else {
-                let reply = core.tag(CONFIG.meId) + ' Function List';
-                for(let i = 0; i < COMMAND_MODULES.length; i++) {
-                    let module = COMMAND_MODULES[i];
-                    let prefix = module.prefix;
-                    for(let name in module.commands) {
-                        reply += '\n`' + prefix + name + '`' + (module.help ? (': ' + (module.help[c] || 'no help available for this command')) : ': no help available for this command\'s module') /* + ': ' + module.help[c]*/;
-                    }
-                }
-                message.channel.send(reply);
-            }
-        } else if(parts[1] === 'sd') {
-            if(message.author.id === CONFIG.archId) {
-                message.channel.send('Self destruct sequence activated.');
-                restart();
-            } else {
-                message.channel.send(message.channel.send(core.tag(message.author.id) + ', your credentials, please?'));
-            }
+        let f = coreFunctions[parts[1]];
+        if(f) {
+            f();
         } else {
             message.channel.send('You called? If you need help, say: ' + core.tag(CONFIG.meId) + ' help [command]');
         }
