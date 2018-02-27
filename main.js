@@ -1,11 +1,12 @@
 const Discord = require('discord.js');
 const ME = new Discord.Client();
-
 const CONFIG = require('../config.json');
 
 const cerebrum = require('./cerebrum.js');
 const rpg = require('./rpg.js');
 const COMMAND_MODULES = [cerebrum, rpg];
+
+const version = '0X';
 
 const core = require('./core.js');
 let asleep = false;
@@ -72,37 +73,47 @@ ME.on('message', function(message) {
     let input = message.content;
     console.log(input);
     let parts = input.split(' ').map(function(s) { return s.trim(); });
-    if(parts[0] === core.tag(CONFIG.meId) && parts.length === 1) {
-        message.channel.send('You called? If you need help, say: ' + core.tag(CONFIG.meId) + ' help [command]');
-    } else if(parts[0] === core.tag(CONFIG.meId) && parts[1] === 'help') {
-        let criterion = parts[2] || '';
-        if(criterion) {
-            let reply = core.tag(CONFIG.meId) + ' Function Help';
-            for(let i = 0; i < COMMAND_MODULES.length; i++) {
-                let module = COMMAND_MODULES[i];
-                let prefix = module.prefix;
-                for(let name in module.commands) {
-                    let command = prefix + name;
-                    if(command.startsWith(criterion)) {
+    if(parts[0] === core.tag(CONFIG.meId)) {
+        if(!parts[1]) {
+            message.channel.send('You called? If you need help, say: ' + core.tag(CONFIG.meId) + ' help [command]');
+        } else if(parts[1] === 'about') {
+            message.channel.send('Created by ' + core.tag(CONFIG.archId) + '.\nGitHub: https://github.com/INeedAUniqueUsername/Arch-Luminous');
+        } else if(parts[1] === 'version') {
+            message.channel.send('My Version: `' + version + '`');
+        } else if(parts[1] === 'help') {
+            let criterion = parts[2] || '';
+            if(criterion) {
+                let reply = core.tag(CONFIG.meId) + ' Function Help';
+                for(let i = 0; i < COMMAND_MODULES.length; i++) {
+                    let module = COMMAND_MODULES[i];
+                    let prefix = module.prefix;
+                    for(let name in module.commands) {
+                        let command = prefix + name;
+                        if(command.startsWith(criterion)) {
+                            reply += '\n`' + prefix + name + '`' + (module.help ? (': ' + (module.help[c] || 'no help available for this command')) : ': no help available for this command\'s module') /* + ': ' + module.help[c]*/;
+                        }
+                    }
+                }
+                message.channel.send(reply);
+            } else {
+                let reply = core.tag(CONFIG.meId) + ' Function List';
+                for(let i = 0; i < COMMAND_MODULES.length; i++) {
+                    let module = COMMAND_MODULES[i];
+                    let prefix = module.prefix;
+                    for(let name in module.commands) {
                         reply += '\n`' + prefix + name + '`' + (module.help ? (': ' + (module.help[c] || 'no help available for this command')) : ': no help available for this command\'s module') /* + ': ' + module.help[c]*/;
                     }
                 }
+                message.channel.send(reply);
             }
-            message.channel.send(reply);
-        } else {
-            let reply = core.tag(CONFIG.meId) + ' Function List';
-            for(let i = 0; i < COMMAND_MODULES.length; i++) {
-                let module = COMMAND_MODULES[i];
-                let prefix = module.prefix;
-                for(let name in module.commands) {
-                    reply += '\n`' + prefix + name + '`' + (module.help ? (': ' + (module.help[c] || 'no help available for this command')) : ': no help available for this command\'s module') /* + ': ' + module.help[c]*/;
-                }
+        } else if(parts[1] === 'sd') {
+            if(message.author.id === CONFIG.archId) {
+                message.channel.send('Self destruct sequence activated.');
+                restart();
+            } else {
+                message.channel.send(message.channel.send(core.tag(message.author.id) + ', your credentials, please?'));
             }
-            message.channel.send(reply);
         }
-    } else if(parts[0] === core.tag(CONFIG.meId) && parts[1] === 'sd' && message.author.id === CONFIG.archId) {
-        message.channel.send('Self destruct sequence activated.');
-        restart();
     } else if(cerebrum.respond(message)) {
         return;
     }
