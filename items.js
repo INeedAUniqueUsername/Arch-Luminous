@@ -29,7 +29,7 @@ const types = {
     die_loaded: function() {
         return {
             name: 'loaded six-sided die',
-            desc: 'a standard six-sided die',
+            desc: 'a loaded six-sided die with a preference for the number 6',
             
             use: {
                 stats: function() {

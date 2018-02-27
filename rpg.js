@@ -60,6 +60,32 @@ module.exports = {
             }
             message.channel.send(reply);
         },
+        create: function(message, args) {
+            let author = message.author.id;
+            inventory.initialize(author);
+            
+            let criterion = args.join(' ') || '';
+            let result_types = [];
+            for(let name in items.typesByName) {
+                if(name.startsWith(criterion)) {
+                    result_types.push(items.typesByName[name]);
+                }
+            }
+            if(result_types.length === 0) {
+                message.channel.send(core.tag(author) + ', item not found');
+            } else if(result_types.length > 1) {
+                let reply = core.tag(author) + ', ' + results.length + ' create which item?';
+                for(let i = 0; i < result_types.length; i++) {
+                    let item = result_types[i]();
+                    reply += '\n' + item.name + ': ' + item.desc;
+                }
+                message.channel.send(reply);
+            } else {
+                let item = result_types[0]();
+                message.channel.send(core.tag(author) + ', created an item\n' + item.name + ': ' + item.desc);
+                inventory[author].items.push(item);
+            }
+        },
         use: function(message, args) {
             let author = message.author.id;
             inventory.initialize(author);
