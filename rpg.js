@@ -112,7 +112,7 @@ module.exports = {
                 let item = results[0];
                 let f = item.use[action];
                 if(f) {
-                    message.channel.send(core.tag(author) + ', ' + f.call(item));
+                    f.call(item, message)
                 } else {
                     message.channel.send(core.tag(author) + ', unknown use');
                 }

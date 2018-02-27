@@ -3,6 +3,8 @@ const core = require('./core.js');
 const CONFIG = require('../config.json');
 let hooks = [
     {
+        //We always make sure to define 'this' as the hook object when calling functions
+        
         //If specified, then this hook only intercepts messages from a specific author
         targetId: CONFIG.archId,
         //This is an anonymous function that handles input for a hook. We return true if we intercepted the message
@@ -25,6 +27,15 @@ module.exports = {
     add: function(hook) {
         hooks.push(hook);
     },
+    match: function(predicate) {
+        for(let i = 0; i < hooks.length; i++) {
+            let hook = hooks[i];
+            if(predicate(hook)) {
+                return hook;
+            }
+        }
+        return null;
+    },
     intercept: function(message) {
         console.log('Processing hooks');
         //We return true to say that we intercept the message and that the parent should not process it any further
@@ -34,12 +45,12 @@ module.exports = {
             //If we have a target ID, then we check if the author matches it
             if(hook.targetId && hook.targetId !== message.author.id)
                 continue;
-            if(hook.intercept(message)) {
+            if(hook.intercept.call(hook, message)) {
                 //If we intercept this message, then we leave the remaining hooks for next time
                 
                 if(hook.remove) {
                     //Check if we need to remove this hook
-                    if(hook.remove === true || hook.remove.call(hook) === true) {
+                    if(hook.remove === true || hook.remove.call(hook, message) === true) {
                         //Remove this hook because we are done with it
                         hooks.splice(i, 1);
                     }

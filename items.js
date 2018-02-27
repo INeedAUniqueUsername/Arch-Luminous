@@ -1,23 +1,94 @@
+const hooks = require('./hooks.js');
+const core = require('./core.js');
 const types = {
+    example: function() {
+        return {
+            name: 'example',
+            desc: 'example',
+            use: {
+                example: function(message) {
+                    return 'example';
+                }
+            },
+            example: 'example'
+        }
+    },
     die_std: function() {
         return {
             name: 'six-sided die',
             desc: 'a standard six-sided die',
             
             use: {
-                stats: function() {
+                stats: function(message) {
                     let average = 0;
                     let record = this.roll_record;
                     for(let i = 0; i < record.length; i++) {
                         average += record[i];
                     }
                     average /= record.length;
-                    return 'You have rolled this bundle of dice ' + record.length + ' times. Your average roll is ' + average;
+                    message.channel.send(core.tag(message.author.id) + ', You have rolled this bundle of dice ' + record.length + ' times. Your average roll is ' + average);
                 },
-                roll: function() {
+                roll: function(message) {
                     let roll = this.roll();
                     this.roll_record.push(roll);
-                    return 'You roll ' + roll;
+                    message.channel.send(core.tag(message.author.id) + ', You roll ' + roll);
+                },
+                multi: function(message) {
+                    let item = this;
+                    let actionDesc =  'Enter an action. Enter `quit` to finish.';
+                    hooks.add({
+                        targetId: message.author.id,
+                        intercept: function(message) {
+                            let action = message.content;
+                            if(action === 'quit') {
+                                message.channel.send('You are done using this item');
+                                this.remove = true;
+                                return true;
+                            } else if(action === 'multi') {
+                                message.channel.send('You are already using this item.' + actionDesc);
+                                return true;
+                            }
+                            
+                            let f = item.use[action];
+                            if(f) {
+                                f.call(item, message);
+                            } else {
+                                let reply = 'Unknown action. Valid actions:';
+                                for(let actions in item.use) {
+                                    reply += ' `' + actions + '`';
+                                }
+                                message.channel.send(reply);
+                            }
+                            
+                            message.channel.send('You are using this item.' + actionDesc);
+                            return true;
+                        },
+                        remove: false
+                    });
+                    message.channel.send(core.tag(message.author.id) + ', You are using this item.' + actionDesc);
+                },
+                throw: function(message) {
+                    let item = this;
+                    /*
+                    if(!hooks.match(hook => {
+                        return hook.itemSource === item;
+                    })) {
+                        
+                    } else {
+                        return 'You are in the middle of throwing this die';
+                    }
+                    */
+                    
+                    //The hook prevents this action from being called before the player specifies a target
+                    hooks.add({
+                        targetId: message.author.id,
+                        intercept: function(message) {
+                            message.channel.send('You throw the ' + item.name + ' at ' + message.content + '. It\'s a direct hit!');
+                            this.remove = true;
+                            return true;
+                        }
+                    });
+                    message.channel.send(core.tag(message.author.id) + ', Throw this die at what?');
                 }
             },
             roll_record: [],
