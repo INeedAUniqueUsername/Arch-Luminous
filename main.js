@@ -7,6 +7,8 @@ const cerebrum = require('./cerebrum.js');
 const rpg = require('./rpg.js');
 const COMMAND_MODULES = [cerebrum, rpg];
 
+const hooks = require('./hooks.js');
+
 const version = '0X';
 let asleep = false;
 const restart = function() {
@@ -115,7 +117,10 @@ me.on('message', function(message) {
     let input = message.content;
     console.log(input);
     let parts = input.split(' ').map(function(s) { return s.trim(); });
-    if(parts[0] === core.tag(CONFIG.meId)) {
+    if(hooks.intercept(message)) {
+        console.log('Message intercepted by hook');
+        return;
+    } else if(parts[0] === core.tag(CONFIG.meId)) {
         let f = coreFunctions[parts[1]];
         if(f) {
             f();
