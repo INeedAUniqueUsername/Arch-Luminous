@@ -4,12 +4,9 @@ const core = require('./core.js');
 const rpg = require('./rpg.js');
 let sponges = {}, userVars = {}, macros = {};
 module.exports = {
+    prefix: 'A!',
     ready: function() {
         console.log('Cerebrum online');
-        rpg.ready();
-        for(let command in rpg.commands) {
-            module.exports.commands[command] = rpg.commands[command];
-        }
     },
     respond: function(message) {
         let input = message.content;
@@ -17,7 +14,7 @@ module.exports = {
         let input2;
         if(input.toLowerCase() === 'hello') {
             message.channel.send("world!");
-        } else if(!input.startsWith('Arch!sponge') && sponges[message.author.id]) {
+        } else if(!input.startsWith(module.exports.prefix + 'sponge') && sponges[message.author.id]) {
             message.channel.send(core.tag(message.author.id) + ', *whoa, a talking sponge?!*');
         } else if(input.startsWith(core.tag(CONFIG.meId))) {
             message.channel.send(core.tag(message.author.id) + ', no u.');

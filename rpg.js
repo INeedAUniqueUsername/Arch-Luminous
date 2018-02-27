@@ -21,6 +21,7 @@ let inventory = {
     }
 };
 module.exports = {
+    prefix: 'R!',
     ready: function() {
         console.log('RPG online');
     },
