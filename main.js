@@ -33,8 +33,18 @@ const coreFunctions = {
                 let prefix = module.prefix;
                 for(let name in module.commands) {
                     let command = prefix + name;
-                    if(command.startsWith(criterion)) {
-                        reply += '\n`' + prefix + name + '`' + (module.help ? (': ' + (module.help[c] || 'no help available for this command')) : ': no help available for this command\'s module') /* + ': ' + module.help[c]*/;
+                    if(command.includes(criterion)) {
+                        let help = module.help;
+                        if(help) {
+                            let text = help[name];
+                            if(text) {
+                                reply += '\n' + text;
+                            } else {
+                                reply += '\n`' + prefix + name + '`: No help available for this command';
+                            }
+                        } else {
+                            reply += '\n`' + prefix + name + '`: No help available for this command\'s module';
+                        }
                     }
                 }
             }
@@ -45,7 +55,17 @@ const coreFunctions = {
                 let module = COMMAND_MODULES[i];
                 let prefix = module.prefix;
                 for(let name in module.commands) {
-                    reply += '\n`' + prefix + name + '`' + (module.help ? (': ' + (module.help[c] || 'no help available for this command')) : ': no help available for this command\'s module') /* + ': ' + module.help[c]*/;
+                    let help = module.help;
+                    if(help) {
+                        let text = help[name];
+                        if(text) {
+                            reply += '\n' + text;
+                        } else {
+                            reply += '\n`' + prefix + name + '`: No help available for this command';
+                        }
+                    } else {
+                        reply += '\n`' + prefix + name + '`: No help available for this command\'s module';
+                    }
                 }
             }
             message.channel.send(reply);
