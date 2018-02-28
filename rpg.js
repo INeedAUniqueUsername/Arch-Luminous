@@ -90,7 +90,7 @@ module.exports = {
             let author = message.author.id;
             inventory.initialize(author);
             
-            let action = args.shift();
+            let action = args.pop();
             let name = args.join(' ');
             
             let items = inventory[author].items;

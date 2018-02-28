@@ -7,7 +7,7 @@ const types = {
             desc: 'example',
             use: {
                 example: function(message) {
-                    return 'example';
+                    message.channel.send('example');
                 }
             },
             example: 'example'
@@ -35,17 +35,17 @@ const types = {
                 },
                 multi: function(message) {
                     let item = this;
-                    let actionDesc =  'Enter an action. Enter `quit` to finish.';
+                    let actionDesc =  ' Enter an action, or `quit` to finish.';
                     hooks.add({
                         targetId: message.author.id,
                         intercept: function(message) {
                             let action = message.content;
                             if(action === 'quit') {
-                                message.channel.send('You are done using this item');
+                                message.channel.send('You are no longer using this ' + item.name);
                                 this.remove = true;
                                 return true;
                             } else if(action === 'multi') {
-                                message.channel.send('You are already using this item.' + actionDesc);
+                                message.channel.send('You are already using this ' + item.name + '.' + actionDesc);
                                 return true;
                             }
                             
@@ -53,19 +53,23 @@ const types = {
                             if(f) {
                                 f.call(item, message);
                             } else {
-                                let reply = 'Unknown action. Valid actions:';
+                                let reply = 'Unknown action. Enter `quit` to finish. Valid actions:';
                                 for(let actions in item.use) {
                                     reply += ' `' + actions + '`';
                                 }
                                 message.channel.send(reply);
                             }
                             
-                            message.channel.send('You are using this item.' + actionDesc);
+                            //message.channel.send('You are using this item.' + actionDesc);
                             return true;
                         },
                         remove: false
                     });
-                    message.channel.send(core.tag(message.author.id) + ', You are using this item.' + actionDesc);
+                    let reply = core.tag(message.author.id) + ', You are now using this ' + item.name + '.' + actionDesc + ' Valid actions:';
+                    for(let actions in item.use) {
+                        reply += ' `' + actions + '`';
+                    }
+                    message.channel.send(reply);
                 },
                 throw: function(message) {
                     let item = this;

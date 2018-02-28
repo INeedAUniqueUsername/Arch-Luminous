@@ -18,14 +18,14 @@ const restart = function() {
     });
 };
 const coreFunctions = {
-    about: function() {
+    about: function(message, args) {
         message.channel.send('Created by ' + core.tag(CONFIG.archId) + '.\nGitHub: https://github.com/INeedAUniqueUsername/Arch-Luminous');
     },
-    version: function() {
+    version: function(message, args) {
         message.channel.send('My Version: `' + version + '`');
     },
-    help: function() {
-        let criterion = parts[2] || '';
+    help: function(message, args) {
+        let criterion = args[0] || '';
         if(criterion) {
             let reply = core.tag(CONFIG.meId) + ' Function Help';
             for(let i = 0; i < COMMAND_MODULES.length; i++) {
@@ -51,7 +51,7 @@ const coreFunctions = {
             message.channel.send(reply);
         }
     },
-    sd: function() {
+    sd: function(message, args) {
         if(message.author.id === CONFIG.archId) {
             message.channel.send('Self destruct sequence activated.');
             restart();
@@ -123,7 +123,7 @@ me.on('message', function(message) {
     } else if(parts[0] === core.tag(CONFIG.meId)) {
         let f = coreFunctions[parts[1]];
         if(f) {
-            f();
+            f(message, parts.slice(2));
         } else {
             message.channel.send('You called? If you need help, say: ' + core.tag(CONFIG.meId) + ' help [command]');
         }
