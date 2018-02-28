@@ -5,6 +5,9 @@ const rpg = require('./rpg.js');
 let sponges = {}, userVars = {}, macros = {};
 let users = [];
 const prefix = 'A!';
+const helpText = function(name, desc) {
+    return '`' + prefix + name + '`: ' + desc;
+}
 module.exports = {
     commands: {
         bind: function(message, args) {
@@ -73,11 +76,11 @@ module.exports = {
         },
     },
     help: {
-        bind: ('`' + prefix + 'bind <alias> <macro>`: Binds a custom command macro for your convenience'),
-        bindings: ('`' + prefix + 'bindings`: Lists all active macros.'),
-        lisp: ('`' + prefix + 'lisp`: Runs lisp code'),
-        sponge: ('`' + prefix + 'sponge`: Transforms you into a sponge'),
-        unbind: ('`' + prefix + 'unbind <alias>`: Unbinds a custom command macro for your convenience')
+        bind: helpText('bind <alias> <macro>', 'Binds a custom command macro for your convenience'),
+        bindings: helpText('bindings', 'Lists all active macros'),
+        lisp: helpText('lisp <code>...', 'Runs lisp code'),
+        sponge: helpText('sponge', 'Transforms you into a sponge'),
+        unbind: helpText('unbind <alias>', 'Unbinds a custom command macro for your convenience'),
     },
     macros: macros,
     prefix: prefix,

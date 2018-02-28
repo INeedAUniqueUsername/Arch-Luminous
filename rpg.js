@@ -20,8 +20,20 @@ let inventory = {
         }
     }
 };
+let parties = {
+    partyName: {
+        members: [],
+        leaders: [],
+        inviteOnly: true,
+        invited: []
+    }
+}
+const prefix = 'R!';
+const helpText = function(name, desc) {
+    return '`' + prefix + name + '`: ' + desc;
+}
 module.exports = {
-    prefix: 'R!',
+    prefix: prefix,
     ready: function() {
         console.log('RPG online');
     },
@@ -120,5 +132,18 @@ module.exports = {
                 message.channel.send(core.tag(author) + ', item not found');
             }
         }
+    },
+    help: {
+        create: helpText('create <name>...', 'Gives you the item with the specified name'),
+        examine: helpText('examine <name>...', 'Gives you the description of the item with the specified name'),
+        inventory: helpText('inventory', 'Lists all the items in your inventory'),
+        party: helpText('party <subcommand>', 'Provides subcommands for managing parties')
+            + '\n' + helpText('party claim', 'Claim leadership of a leaderless party of which you are a member')
+            + '\n' + helpText('party create <name>...', 'Create a party with the specified name')
+            + '\n' + helpText('party invite <user> <name>...', 'Invite the specified user to the specified party')
+            + '\n' + helpText('party join <name>...', 'Join an open party or one that you have received an invitation for')
+            + '\n' + helpText('party leave <name>...', 'Leave a party of which you are a member')
+            + '\n' + helpText('party list', 'List all parties'),
+        use: helpText('use <name>... <action>', 'Use the specified item for the specified action')
     }
 }
