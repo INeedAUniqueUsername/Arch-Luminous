@@ -33,7 +33,26 @@ module.exports = {
                 party.leaders.push(message.author.id);
             }
         },
-        //TODO: dissolve (disbands a party if you are a leader or if party is empty)
+        dissolve: function(message, args) {
+            let name = args.join(' ') || '';
+            let party;
+            if(!name) {
+                message.channel.send(core.tag(message.author.id) + ', specify party name.');
+            } else if(!(party = parties[name])) {
+                message.channel.send(core.tag(message.author.id) + ', that party does not exist.');
+            } else if(party.leaders.includes(message.author.id)) {
+                message.channel.send(core.tag(message.author.id) + ', you have dissolved the party `' + name + '`');
+                delete parties[name];
+            } else {
+                //If there are people other than the author in the party
+                if(party.members.length - (party.members.includes(message.author.id) ? 1 : 0) > 0) {
+                    message.channel.send(core.tag(message.author.id) + ', you cannot dissolve an active party unless you are a leader or the only member.');
+                } else {
+                    message.channel.send(core.tag(message.author.id) + ', you have dissolved the party `' + name + '`');
+                    delete parties[name];
+                }
+            }
+        },
         create: function(message, args) {
             let name = args.join(' ') || '';
             if(!name) {
@@ -51,7 +70,6 @@ module.exports = {
             }
         },
         //TODO: Disable inviteOnly command
-        //TODO: Uninvite command
         invite: function(message, args) {
             let invitee = core.id(args.shift()) || '';
             if(!invitee) {
@@ -69,6 +87,8 @@ module.exports = {
                     message.channel.send(core.tag(message.author.id) + ', that is already an open party.');
                 } else if(!party.leaders.includes(message.author.id)) {
                     message.channel.send(core.tag(message.author.id) + ', you must be a leader of the party in order to invite people.');
+                } else if(party.invited.includes(invitee)) {
+                    message.channel.send(core.tag(message.author.id) + ', you already invited that person to that party.');      
                 } else {
                     message.channel.send(core.tag(message.author.id) + ', you invited ' + core.tag(invitee) + ' to join `' + partyName + '`');
                     party.invited.push(invitee);
@@ -95,8 +115,31 @@ module.exports = {
                 }
             }
         },
-        //TODO: kick command
-        //TODO: resign command
+        kick: function(message, args) {
+            let target = core.id(args.shift()) || '';
+            if(!target) {
+                message.channel.send(core.tag(message.author.id) + ', specify target.');
+            } else {
+                let partyName = args.join(' ') || '';
+                let party;
+                let index = -1;
+                let index_leader = -1;
+                if(!partyName) {
+                    message.channel.send(core.tag(message.author.id) + ', specify party name.');
+                } else if(!(party = parties[partyName])) {
+                    message.channel.send(core.tag(message.author.id) + ', that party does not exist.');
+                } else if((index = party.members.indexOf(target)) === -1) {
+                    message.channel.send(core.tag(message.author.id) + ', your target is not a member of that party.');
+                } else if((index_leader = party.leaders.indexOf(target)) !== -1) {
+                    message.channel.send(core.tag(message.author.id) + ', you cannot kick other leaders from that party.');
+                } else if(!party.leaders.includes(message.author.id)) {
+                    message.channel.send(core.tag(message.author.id) + ', you must be a leader of that party in order to kick people.');
+                } else {
+                    message.channel.send(core.tag(message.author.id) + ', you kicked ' + core.tag(invitee) + ' from party `' + partyName + '`');
+                    party.members.splice(index, 1);
+                }
+            }
+        },
         leave: function(message, args) {
             let name = args.join(' ') || '';
             let party;
@@ -110,8 +153,8 @@ module.exports = {
             } else {
                 party.members.splice(index, 1);
                 if((index = party.leaders.indexOf(message.author.id)) > -1) {
-                    party.leaders.splice(index, 1);
                     message.channel.send(core.tag(message.author.id) + ', you have left as a leader of the party `' + name + '`');
+                    party.leaders.splice(index, 1);
                 } else {
                     message.channel.send(core.tag(message.author.id) + ', you have left the party `' + name + '`');
                 }
@@ -130,7 +173,48 @@ module.exports = {
                 //To do: List members and invites
             }
             message.channel.send(reply);
-        }
+        },
+        resign: function(message, args) {
+            let name = args.join(' ') || '';
+            let party;
+            let index = -1;
+            if(!name) {
+                message.channel.send(core.tag(message.author.id) + ', specify party name.');
+            } else if(!(party = parties[name])) {
+                message.channel.send(core.tag(message.author.id) + ', that party does not exist.');
+            } else if((index = party.leaders.indexOf(message.author.id)) == -1) {
+                message.channel.send(core.tag(message.author.id) + ', you are not a leader of that party.');
+            } else {
+                message.channel.send(core.tag(message.author.id) + ', you are no longer a leader of party `' + name + '`');
+                party.leaders.splice(index, 1);
+            }
+        },
+        uninvite: function(message, args) {
+            let invitee = core.id(args.shift()) || '';
+            if(!invitee) {
+                message.channel.send(core.tag(message.author.id) + ', specify invitee.');
+            } else {
+                let partyName = args.join(' ') || '';
+                let party;
+                let index = -1;
+                if(!partyName) {
+                    message.channel.send(core.tag(message.author.id) + ', specify party name.');
+                } else if(!(party = parties[partyName])) {
+                    message.channel.send(core.tag(message.author.id) + ', that party does not exist.');
+                } else if(party.members.includes(invitee)) {
+                    message.channel.send(core.tag(message.author.id) + ', your invitee is already a member of that party.');
+                } else if(!party.inviteOnly) {
+                    message.channel.send(core.tag(message.author.id) + ', that is already an open party.');
+                } else if(!party.leaders.includes(message.author.id)) {
+                    message.channel.send(core.tag(message.author.id) + ', you must be a leader of the party in order to uninvite people.');
+                } else if((index = party.invited.indexOf(invitee)) === -1) {
+                    message.channel.send(core.tag(message.author.id) + ', you did not invite that person to that party.');      
+                } else {
+                    message.channel.send(core.tag(message.author.id) + ', you uninvited ' + core.tag(invitee) + ' from `' + partyName + '`');
+                    party.invited.splice(index, 1);
+                }
+            }
+        },
     },
     help: {
         party: helpText('<subcommand>', 'Provides subcommands for managing parties'),
