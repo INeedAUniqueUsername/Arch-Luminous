@@ -26,35 +26,18 @@ const coreFunctions = {
     },
     help: function(message, args) {
         let criterion = args[0] || '';
-        if(criterion) {
-            let reply = core.tag(CONFIG.meId) + ' Function Help';
-            for(let i = 0; i < COMMAND_MODULES.length; i++) {
-                let module = COMMAND_MODULES[i];
-                let prefix = module.prefix;
-                for(let name in module.commands) {
-                    let command = prefix + name;
-                    if(command.includes(criterion)) {
-                        let help = module.help;
-                        if(help) {
-                            let text = help[name];
-                            if(text) {
-                                reply += '\n' + text;
-                            } else {
-                                reply += '\n`' + prefix + name + '`: No help available for this command';
-                            }
-                        } else {
-                            reply += '\n`' + prefix + name + '`: No help available for this command\'s module';
-                        }
-                    }
-                }
-            }
-            message.channel.send(reply);
-        } else {
-            let reply = core.tag(CONFIG.meId) + ' Function List';
-            for(let i = 0; i < COMMAND_MODULES.length; i++) {
-                let module = COMMAND_MODULES[i];
-                let prefix = module.prefix;
-                for(let name in module.commands) {
+        let reply = core.tag(CONFIG.meId) + ' Function Help';
+        for(let i = 0; i < COMMAND_MODULES.length; i++) {
+            reply += '\n';
+            let module = COMMAND_MODULES[i];
+            let desc = module.desc;
+            if(desc)
+                reply += '\n' + desc;
+
+            let prefix = module.prefix;
+            for(let name in module.commands) {
+                let command = prefix + name;
+                if(command.includes(criterion)) {
                     let help = module.help;
                     if(help) {
                         let text = help[name];
@@ -68,8 +51,8 @@ const coreFunctions = {
                     }
                 }
             }
-            message.channel.send(reply);
         }
+        message.channel.send(reply);
     },
     sd: function(message, args) {
         if(message.author.id === CONFIG.archId) {
