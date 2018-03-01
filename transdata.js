@@ -2,7 +2,7 @@ let spawn = require('child_process').spawn;
 let fs = require('fs');
 let core = require('./core.js');
 const CONFIG = require('../config.json')
-const prefix = 'TransData!';
+const prefix = 'T!';
 
 let children = {};
 let output = {};
