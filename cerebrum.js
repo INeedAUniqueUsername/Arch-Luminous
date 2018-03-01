@@ -14,6 +14,7 @@ module.exports = {
         bind: function(message, args) {
             let author = message.author.id;
             if(author !== CONFIG.archId) {
+                message.channel.send(core.tag(message.author.id) + ', do I know you?');
                 return;
             }
             let alias = args.shift();
@@ -39,7 +40,18 @@ module.exports = {
             }
             message.channel.send(core.tag(message.author.id) + ', ' + reply);
         },
+        echo: function(message, args) {
+            if(message.author.id !== CONFIG.archId) {
+                message.channel.send(core.tag(message.author.id) + ', do I know you?');
+                return;
+            }
+            message.channel.send(args.join(' '));
+        },
         lisp: function(message, args) {
+            if(message.author.id !== CONFIG.archId) {
+                message.channel.send(core.tag(message.author.id) + ', do I know you?');
+                return;
+            }
             args = args.join(' ');
             try {
                 let result = lisp.run(args.trim());
@@ -58,6 +70,7 @@ module.exports = {
         unbind: function(message, args) {
             let author = message.author.id;
             if(author !== CONFIG.archId) {
+                message.channel.send(core.tag(message.author.id) + ', do I know you?');
                 return;
             }
             //The alias already got replaced with a macro

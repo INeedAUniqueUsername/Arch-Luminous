@@ -7,8 +7,9 @@ const cerebrum = require('./cerebrum.js');
 
 const party = require('./party.js');
 const rpg = require('./rpg.js');
+const transdata = require('./transdata.js');
 
-const COMMAND_MODULES = [cerebrum, rpg, party];
+const COMMAND_MODULES = [cerebrum, rpg, party, transdata];
 
 const hooks = require('./hooks.js');
 
@@ -80,9 +81,9 @@ const run = function(message, input, command_module) {
         }
     } while(active);
     */
-    input = input.split(' ');
+    //Get rid of the first newline
+    input = input.replace('\n', ' ').split(' ');
     let command = input.shift().toLowerCase();
-
     for(let alias in cerebrum.macros) {
         if(command === alias) {
             message.channel.send(core.tag(message.author.id) + ', `' + command + ' -> ' + cerebrum.macros[alias] + '`');
