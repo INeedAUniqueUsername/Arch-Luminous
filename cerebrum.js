@@ -9,6 +9,7 @@ const helpText = function(name, desc) {
     return '`' + prefix + name + '`: ' + desc;
 }
 module.exports = {
+    desc: 'Cerebrum Module',
     commands: {
         bind: function(message, args) {
             let author = message.author.id;

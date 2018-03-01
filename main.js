@@ -4,8 +4,11 @@ const core = require('./core.js');
 const CONFIG = require('../config.json');
 
 const cerebrum = require('./cerebrum.js');
+
+const party = require('./party.js');
 const rpg = require('./rpg.js');
-const COMMAND_MODULES = [cerebrum, rpg];
+
+const COMMAND_MODULES = [cerebrum, rpg, party];
 
 const hooks = require('./hooks.js');
 
