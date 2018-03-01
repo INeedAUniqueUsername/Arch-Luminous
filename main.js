@@ -141,6 +141,7 @@ me.on('message', function(message) {
         let module = COMMAND_MODULES[i];
         if(input.startsWith(module.prefix)) {
             run(message, input.slice(module.prefix.length), module);
+            break;
         }
     }
 });
