@@ -207,10 +207,7 @@ module.exports = {
                 message.channel.send(core.tag(author) + ', item not found');
             } else if(result_types.length > 1) {
                 let reply = core.tag(author) + ', ' + results.length + ' create which item?';
-                for(let i = 0; i < result_types.length; i++) {
-                    let item = result_types[i]();
-                    reply += '\n' + item.name + ': ' + item.desc;
-                }
+                reply += '\n' + result_types.map(type => ('`' + type.name + '`' + ': ' + type.desc)).join('\n');
                 message.channel.send(reply);
             } else {
                 let item = result_types[0]();
@@ -233,10 +230,7 @@ module.exports = {
                 }
             }
             let reply = core.tag(author) + ', ' + results.length + ' results found.';
-            for(let i = 0; i < results.length; i++) {
-                let item = results[i];
-                reply += '\n' + item.name + ': ' + item.desc;
-            }
+            reply += '\n' + results.map(item => ('`' + item.name + '`' + ': ' + item.desc + (!item.use ? '' : (' (Use: ' + Object.keys(item.use).map(use => ('`' + use + '`')).join(', ') + ')')))).join('\n');
             message.channel.send(reply);
             
         },
@@ -244,13 +238,7 @@ module.exports = {
             let author = message.author.id;
             
             let items = inventory[author].items;
-            let reply = core.tag(author) + ', ' + items.length + ' items: ' + items.map(item => ('`' + item.name + '`')).join(' ');
-            /*
-            for(let i = 0; i < items.length; i++) {
-                let item = items[i];
-                reply += '\n' + item.name + ': ' + item.desc;
-            }
-            */
+            let reply = core.tag(author) + ', ' + items.length + ' items: ' + items.map(item => ('`' + item.name + '`')).join(', ');
             message.channel.send(reply);
         },
         use: function(message, args) {
