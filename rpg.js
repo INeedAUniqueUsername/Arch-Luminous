@@ -77,9 +77,9 @@ let inventory = {
         if(!inventory[id]) {
             inventory[id] = {
                 items: [
-                    itemtypes.types.die_std(),
-                    itemtypes.types.die_loaded(),
-                    itemtypes.types.bundle_die_std()
+                    new itemtypes.types.die_std(),
+                    new itemtypes.types.die_loaded(),
+                    new itemtypes.types.bundle_die_std()
                 ]
             };
         }
