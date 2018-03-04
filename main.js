@@ -89,7 +89,7 @@ const run = function(message, input, command_module) {
             message.channel.send(core.tag(message.author.id) + ', `' + command + ' -> ' + cerebrum.macros[alias] + '`');
             input.unshift(cerebrum.macros[alias]);
             input = input.join(' ').split(' ');
-            command = input.shift().toLowerCase();
+            command = input.shift();
             break;
         }
     }
@@ -101,12 +101,15 @@ const run = function(message, input, command_module) {
         for(let i = 0; i < COMMAND_MODULES.length; i++) {
             let module = COMMAND_MODULES[i];
             if(f = module.commands[command]) {
+                command_module = module;
                 break;
             }
         }
     }
     if(f) {
-        f(message, input);
+        if(!command_module.precommand || command_module.precommand(message, command, input)) {
+            f(message, input);
+        }
     } else {
         message.channel.send(core.tag(message.author.id) + ', unknown command `' + command + '`');
     }

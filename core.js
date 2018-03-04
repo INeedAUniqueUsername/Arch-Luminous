@@ -1,17 +1,46 @@
-const id = function(inp) {
-    // strips out the first <@! and > in a string
-    // if you send it a string that is already a legit id, it won't be harmed
-    // if not passed a String, sends the input back
-    // should always return a String
-    if (typeof(inp) !== 'string') {return inp};
-    var outp = inp.replace('<', '').replace('>', '').replace('!', '').replace('@', '');
-    return outp;
-};
-const tag = function(inp) {
-    var outp = '<@' + inp + '>';
-    return outp;
-};
+const main = require('./main.js');
+const FS = require('fs');
 module.exports = {
-    id: id,
-    tag: tag,
+    id: function(tag) {
+        return (typeof(tag) !== 'string') ? tag : tag.replace('<', '').replace('>', '').replace('!', '').replace('@', '');
+    },
+    tag: function(id) {
+        return '<@' + id + '>';
+    },
+    save: function(obj, path) {
+		if (!path) {
+			path = '../saved.json';
+		}
+        console.log('Saving file ' + path);
+        //main.setBusy('File saving in progress');
+		var writeStream = FS.createWriteStream(path, {autoClose: true});
+		writeStream.write(JSON.stringify(obj, null, 1));
+		writeStream.end(function() {
+            //main.clearBusy();
+			console.log('File ' + path + ' saved');
+		});
+	},
+    load: function(obj, path) {
+        try {
+            let file = require(path);
+            console.log(Object.assign(file, obj));
+            return Object.assign(file, obj);
+        } catch(e) {
+            console.log(e);
+        }
+        return obj;
+    },
+    //https://stackoverflow.com/a/46946633
+    splitQuotes: function(s) {
+        return s.match(/\\?.|^$/g).reduce((p, c) => {
+            if(c === '"') {
+                p.quote ^= 1;
+            } else if(!p.quote && c === ' ') {
+                p.a.push('');
+            } else {
+                p.a[p.a.length-1] += c.replace(/\\(.)/,"$1");
+            }
+            return  p;
+        }, {a: ['']}).a;
+    }
 }
