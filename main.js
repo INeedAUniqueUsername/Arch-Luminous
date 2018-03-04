@@ -15,6 +15,7 @@ const hooks = require('./hooks.js');
 
 const version = '0X';
 let asleep = false;
+const self_prefix = core.tag(CONFIG.meId) + ' me ';
 const restart = function() {
     asleep = true;  //This instance stops responding to messages
     require('child_process').exec('node \"' + CONFIG.path + '\"', function() {
@@ -62,6 +63,33 @@ const coreFunctions = {
         if(message.author.id === CONFIG.archId) {
             message.channel.send('Self destruct sequence activated.');
             restart();
+        } else {
+            message.channel.send(message.channel.send(core.tag(message.author.id) + ', your credentials, please?'));
+        }
+    },
+    you: function(message, args) {
+        if(message.author.id === CONFIG.archId) {
+            if(args.length === 0) {
+                hooks.add({
+                    targetId: message.author.id,
+                    intercept: function(message) {
+                        if(message.content === 'quit') {
+                            message.channel.send('Remote control deactivated.');
+                            this.remove = true;
+                            return true;
+                        } else {
+                            message.delete(0);
+                            message.channel.send(self_prefix + message.content);
+                            return true;
+                        }
+                    },
+                    remove: false
+                });
+                message.channel.send('Remote control activated. Type `quit` when you are done.');
+            } else {
+                message.channel.send(self_prefix + args.join(' '));
+            }
+            
         } else {
             message.channel.send(message.channel.send(core.tag(message.author.id) + ', your credentials, please?'));
         }
@@ -122,9 +150,16 @@ me.on('ready', function() {
 me.on('message', function(message) {
     if(asleep)
         return;
-    if(message.author.id === CONFIG.meId)
-        return;
+    if(message.author.id === CONFIG.meId) {
+        if(message.content.startsWith(self_prefix)) {
+            message.delete(0);
+            message.content = message.content.slice(self_prefix.length);
+        } else {
+            return;
+        }
+    }
     let input = message.content;
+    
     console.log(input);
     let parts = input.split(' ').map(function(s) { return s.trim(); });
     if(hooks.intercept(message)) {
