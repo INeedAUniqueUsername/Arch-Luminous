@@ -170,6 +170,7 @@ module.exports = {
             reply += '\nPlayers: ' + room.players.map(player => players[player]).filter(player => !player.hidden).map(player => ('`' + player.nick + '`')).join(', ');
             reply += '\nProps: ' + room.props.filter(prop => !prop.hidden).map(prop => ('`' + prop.name + '`')).join(', ');
             reply += '\nItems: ' + room.items.filter(item => !item.hidden).map(item => ('`' + item.name + '`')).join(', ');
+            reply += '\nExits: ' + Object.keys(room.exits).filter(exit => !room.exits[exit].hidden).map(exit => ('`' + exit + '`'));
             message.channel.send(reply);
         },
         go: function(message, args) {
