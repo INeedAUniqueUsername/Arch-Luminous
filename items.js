@@ -10,6 +10,10 @@ const types = {
                     message.channel.send('example');
                 }
             },
+            //Store mutable data in this object
+            data: {
+                
+            },
             example: 'example'
         }
     },
@@ -21,7 +25,7 @@ const types = {
             use: {
                 stats: function(message) {
                     let average = 0;
-                    let record = this.roll_record;
+                    let record = this.data.record;
                     for(let i = 0; i < record.length; i++) {
                         average += record[i];
                     }
@@ -30,7 +34,7 @@ const types = {
                 },
                 roll: function(message) {
                     let roll = this.roll();
-                    this.roll_record.push(roll);
+                    this.data.record.push(roll);
                     message.channel.send(core.tag(message.author.id) + ', You roll ' + roll);
                 },
                 multi: function(message) {
@@ -95,7 +99,9 @@ const types = {
                     message.channel.send(core.tag(message.author.id) + ', Throw this die at what?');
                 }
             },
-            roll_record: [],
+            data: {
+                record: []
+            },
             
             sides: [1, 2, 3, 4, 5, 6],
             roll: function() { return this.sides[Math.floor(Math.random() * this.sides.length)]; }
@@ -109,7 +115,7 @@ const types = {
             use: {
                 stats: function() {
                     let average = 0;
-                    let record = this.roll_record;
+                    let record = this.data.record;
                     for(let i = 0; i < record.length; i++) {
                         average += record[i];
                     }
@@ -118,11 +124,13 @@ const types = {
                 },
                 roll: function() {
                     let roll = this.roll();
-                    this.roll_record.push(roll);
+                    this.data.record.push(roll);
                     return 'You roll ' + roll;
                 }
             },
-            roll_record: [],
+            data: {
+                record: []
+            },
             
             sides: [1, 2, 3, 4, 5, 6],
             odds: [1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6],
@@ -136,7 +144,7 @@ const types = {
             use: {
                 stats: function() {
                     let average = 0;
-                    let record = this.roll_record;
+                    let record = this.data.record;
                     for(let i = 0; i < record.length; i++) {
                         average += record[i];
                     }
@@ -145,11 +153,13 @@ const types = {
                 },
                 roll: function() {
                     let roll = this.roll();
-                    this.roll_record.push(roll);
+                    this.data.record.push(roll);
                     return 'You roll ' + roll;
                 }
             },
-            roll_record: [],
+            data: {
+                record: []
+            },
             dice: {
                 sides: [1, 2, 3, 4, 5, 6],
                 roll: function() { return this.sides[Math.floor(Math.random() * this.sides.length)]; }
