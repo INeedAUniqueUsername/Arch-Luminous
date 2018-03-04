@@ -10,9 +10,7 @@ let rooms = {
     name: {
         name: 'name',
         desc: 'desc',
-        characters: {
-            id: true
-        },
+        players: [],
         props: [{
             id: 0,
             name: 'name',
@@ -32,7 +30,7 @@ let rooms = {
     start: {
         name: 'ArchROCK Customs Office',
         desc: 'aaaaaaaa',
-        characters: {},
+        players: [],
         props: [
             {
                 name: 'prop',
@@ -52,7 +50,7 @@ let rooms = {
     nowhere: {
         name: 'Nowhere 3000',
         desc: 'Welcome to the future of Nowhere! Cool, isn\'t it?',
-        characters: {},
+        players: [],
         props: [
             {
                 name: 'nothingness',
@@ -148,7 +146,7 @@ module.exports = {
                     location: 'start'
                 };
                 inventory.initialize(author);
-                rooms.start.characters[author] = true;
+                rooms.start.players.push(author);
             } else if(player.active) {
                 message.channel.send(core.tag(author) + ', you are already logged in.');
             } else {
@@ -169,6 +167,7 @@ module.exports = {
             let reply = '**' + room.name + '**';
             reply += '\n' + '*' + room.desc + '*';
             reply += '\n';
+            reply += '\nPlayers: ' + room.players.map(player => players[player]).filter(player => !player.hidden).map(player => ('`' + player.nick + '`')).join(', ');
             reply += '\nProps: ' + room.props.filter(prop => !prop.hidden).map(prop => ('`' + prop.name + '`')).join(', ');
             reply += '\nItems: ' + room.items.filter(item => !item.hidden).map(item => ('`' + item.name + '`')).join(', ');
             message.channel.send(reply);
@@ -181,8 +180,8 @@ module.exports = {
             let destination_room = rooms[destination];
             if(destination) {
                 if(destination_room) {
-                    delete room.characters[author];
-                    destination_room.characters[author] = true;
+                    room.players.splice(room.players.indexOf(author), 1);
+                    destination_room.players.push(author);
                     players[author].location = destination;
                     module.exports.commands.look(message);
                 } else {
