@@ -30,6 +30,13 @@ module.exports = {
         }
         return obj;
     },
+    send: function(message, text) {
+        if(message.channel) {
+            message.channel.send(text);
+        } else {
+            message.author.send(text);
+        }
+    },
     //https://stackoverflow.com/a/46946633
     splitQuotes: function(s) {
         return s.match(/\\?.|^$/g).reduce((p, c) => {

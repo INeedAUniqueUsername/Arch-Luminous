@@ -143,7 +143,7 @@ const types = {
                 this.data.record.push(roll);
                 return 'You roll ' + roll;
             }
-        }
+        };
         this.data = {
             record: []
         };
@@ -153,9 +153,24 @@ const types = {
         };
         this.roll = function() {
             return this.dice.roll() + this.dice.roll() + this.dice.roll() + this.dice.roll() + this.dice.roll() + this.dice.roll();
-        }
+        };
         return this;
-    }
+    },
+    polygone: function() {
+        this.name = 'Polygone';
+        this.desc = 'This poorly written self-help book promises to teach you how to polymorph objects into polygons simply by shouting "Begone!"';
+        this.use = {};
+        this.data = {};
+        this.listeners = {
+            say_owner: function(message, text) {
+                console.log(this.name + ': say_owner, ' + text);
+                if(text === 'Begone!') {
+                    message.channel.send('After a flash of light, you find yourself polymorphed into a polygon.');
+                }
+            }
+        };
+        return this;
+    },
 };
 const typesByName = {};
 //Store each item type under its actual name
