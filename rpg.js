@@ -89,11 +89,36 @@ let inventory = {
         }
     }
 };
+//Stores character information for players who run multiple characters
+let characters_other = {
+    playerId: []    //List of additional player objects associated with the player
+}
 let players = {
     id: {
         active: true,
         nick: 'nick',
         location: '',
+    }
+};
+const Player = function(nick) {
+    this.active = true;
+    this.nick = nick;
+    this.location = 'start';
+    this.listeners = {
+        room_say: listeners.default_say_room,
+    }
+}
+const listeners = {
+    //We pass in the player ID as 'this'
+    default_say_room: function(message, text) {
+        let source = message.author.id;
+        console.log('You:    ' + this);
+        console.log('Source: ' + source);
+        if(parseInt(this) === parseInt(source)) {
+            message.channel.send(core.tag(source) + ', You say: ' + text);
+        } else {
+            message.channel.send(core.tag(source) + ', You hear `' + players[source].nick + '` say: ' + text);
+        }
     }
 };
 const prefix = 'R!';
@@ -140,11 +165,7 @@ module.exports = {
                 }
                 message.channel.send(core.tag(author) + ', logged in as new player.');
                 
-                players[author] = {
-                    active: true,
-                    nick: nick,
-                    location: 'start'
-                };
+                players[author] = new Player(nick);
                 inventory.initialize(author);
                 rooms.start.players.push(author);
             } else if(player.active) {
@@ -160,7 +181,12 @@ module.exports = {
             player.active = false;
             message.channel.send(core.tag(author) + ', logged out.');
         },
-        
+        attack: function(message, args) {
+            
+        },
+        equip: function(message, args) {
+            
+        },
         look: function(message, args) {
             let author = message.author.id;
             let room = getRoom(author);
@@ -190,6 +216,31 @@ module.exports = {
                 }
             } else {
                 message.channel.send(core.tag(author) + ', you wanted to go where?');
+            }
+        },
+        say: function(message, args) {
+            let text = args.join(' ');
+            let author = message.author.id;
+            let room = getRoom(author);
+            for(let i = 0; i < room.players.length; i++) {
+                let playerId = room.players[i];
+                let player = players[playerId];
+                if(player.listeners.room_say) {
+                    player.listeners.room_say.call(playerId, message, text);
+                }
+            }
+            
+            let items = inventory[author].items;
+            for(let i = 0; i < items.length; i++) {
+                let item = items[i];
+                if(!item.listeners) {
+                    console.log('Warning: ' + item.name + '.listeners is undefined');
+                } else if(!item.listeners.say_owner) {
+                    console.log('Warning: ' + item.name + '.listeners.say_owner is undefined');
+                } else {
+                    console.log(item.name + '.listeners.say_owner called');
+                    item.listeners.say_owner.call(item, message, text);
+                }
             }
         },
         
@@ -244,7 +295,7 @@ module.exports = {
         use: function(message, args) {
             let author = message.author.id;
             
-            let action = args.pop();
+            let action = args.shift();
             let name = args.join(' ');
             
             let items = inventory[author].items;
