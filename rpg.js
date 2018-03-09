@@ -3,7 +3,7 @@ const core = require('./core.js');
 const itemtypes = require('./items.js');
 
 const ROOMS_FILE = config.dir_up + '\\rooms.json';
-const INVENTORY_FILE = config.dir_up + '\\inventory.json';
+const INVENTORIES_FILE = config.dir_up + '\\inventories.json';
 const PLAYERS_FILE = config.dir_up + '\\players.json';
 
 let rooms = {
@@ -69,11 +69,11 @@ let rooms = {
     }
     
 };
-let inventory = {
+let inventories = {
     initialize: function(id) {
-        //console.log('Initialize Inventory ID: ' + id);
-        if(!inventory[id]) {
-            inventory[id] = {
+        //console.log('Initialize Inventories ID: ' + id);
+        if(!inventories[id]) {
+            inventories[id] = {
                 items: [
                     new itemtypes.types.die_std(),
                     new itemtypes.types.die_loaded(),
@@ -92,7 +92,7 @@ let inventory = {
 //Stores character information for players who run multiple characters
 let characters_other = {
     playerId: []    //List of additional player objects associated with the player
-}
+};
 let players = {
     id: {
         active: true,
@@ -106,7 +106,7 @@ const Player = function(nick) {
     this.location = 'start';
     this.listeners = {
         room_say: listeners.default_say_room,
-    }
+    };
 }
 const listeners = {
     //We pass in the player ID as 'this'
@@ -136,13 +136,13 @@ module.exports = {
         console.log('RPG online');
         rooms = core.load(rooms, ROOMS_FILE);
         //TODO: Make sure that loaded items preserve their functions such as 'use' actions
-        //inventory = core.load(inventory, INVENTORY_FILE);
+        //inventories = core.load(inventories, INVENTORIES_FILE);
         //players = core.load(players, PLAYERS_FILE);
     },
     close: function() {
         console.log('RPG offline');
         //core.save(rooms, ROOMS_FILE);
-        //core.save(inventory, INVENTORY_FILE);
+        //core.save(inventories, INVENTORIES_FILE);
         //core.save(players, PLAYERS_FILE);
     },
     precommand: function(message, command, args) {
@@ -166,7 +166,7 @@ module.exports = {
                 message.channel.send(core.tag(author) + ', logged in as new player.');
                 
                 players[author] = new Player(nick);
-                inventory.initialize(author);
+                inventories.initialize(author);
                 rooms.start.players.push(author);
             } else if(player.active) {
                 message.channel.send(core.tag(author) + ', you are already logged in.');
@@ -230,7 +230,7 @@ module.exports = {
                 }
             }
             
-            let items = inventory[author].items;
+            let items = inventories[author].items;
             for(let i = 0; i < items.length; i++) {
                 let item = items[i];
                 if(!item.listeners) {
@@ -263,7 +263,7 @@ module.exports = {
             } else {
                 let item = result_types[0]();
                 message.channel.send(core.tag(author) + ', created an item\n' + item.name + ': ' + item.desc);
-                inventory[author].items.push(item);
+                inventories[author].items.push(item);
             }
         },
         //TODO: Add descriptions of allowed actions with each item
@@ -272,7 +272,7 @@ module.exports = {
             let room = getRoom(author);
             let name = args.join(' ');
             
-            let items = inventory[author].items.concat(room.props).concat(room.items);
+            let items = inventories[author].items.concat(room.props).concat(room.items);
             let results = [];
             for(let i = 0; i < items.length; i++) {
                 let item = items[i];
@@ -288,7 +288,7 @@ module.exports = {
         inventory: function(message, args) {
             let author = message.author.id;
             
-            let items = inventory[author].items;
+            let items = inventories[author].items;
             let reply = core.tag(author) + ', ' + items.length + ' items: ' + items.map(item => ('`' + item.name + '`')).join(', ');
             message.channel.send(reply);
         },
@@ -298,7 +298,7 @@ module.exports = {
             let action = args.shift();
             let name = args.join(' ');
             
-            let items = inventory[author].items;
+            let items = inventories[author].items;
             let results = [];
             for(let i = 0; i < items.length; i++) {
                 let item = items[i];
@@ -317,7 +317,11 @@ module.exports = {
                 let item = results[0];
                 let f = item.use[action];
                 if(f) {
-                    f.call(item, message)
+                    f.call(item, message, author, {
+                        rooms: rooms,
+                        inventories: inventories,
+                        players: players,
+                    });
                 } else {
                     message.channel.send(core.tag(author) + ', unknown action');
                 }
