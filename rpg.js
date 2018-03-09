@@ -69,26 +69,6 @@ let rooms = {
     }
     
 };
-let inventories = {
-    initialize: function(id) {
-        //console.log('Initialize Inventories ID: ' + id);
-        if(!inventories[id]) {
-            inventories[id] = {
-                items: [
-                    new itemtypes.types.die_std(),
-                    new itemtypes.types.die_loaded(),
-                    new itemtypes.types.bundle_die_std()
-                ]
-            };
-        }
-    },
-    playerId: {
-        items: {
-            name: 'item',
-            desc: 'desc'
-        }
-    }
-};
 //Stores character information for players who run multiple characters
 let characters_other = {
     playerId: []    //List of additional player objects associated with the player
@@ -98,6 +78,13 @@ let players = {
         active: true,
         nick: 'nick',
         location: '',
+        inventory: {
+            items: [
+                        new itemtypes.types.die_std(),
+                        new itemtypes.types.die_loaded(),
+                        new itemtypes.types.bundle_die_std()
+            ]
+        }
     }
 };
 const Player = function(nick) {
@@ -107,6 +94,13 @@ const Player = function(nick) {
     this.listeners = {
         room_say: listeners.default_say_room,
     };
+    this.inventory = {
+        items: [
+                    new itemtypes.types.die_std(),
+                    new itemtypes.types.die_loaded(),
+                    new itemtypes.types.bundle_die_std()
+        ]
+    }
 }
 const listeners = {
     //We pass in the player ID as 'this'
@@ -166,7 +160,6 @@ module.exports = {
                 message.channel.send(core.tag(author) + ', logged in as new player.');
                 
                 players[author] = new Player(nick);
-                inventories.initialize(author);
                 rooms.start.players.push(author);
             } else if(player.active) {
                 message.channel.send(core.tag(author) + ', you are already logged in.');
@@ -230,7 +223,7 @@ module.exports = {
                 }
             }
             
-            let items = inventories[author].items;
+            let items = players[author].inventory.items;
             for(let i = 0; i < items.length; i++) {
                 let item = items[i];
                 if(!item.listeners) {
@@ -263,7 +256,7 @@ module.exports = {
             } else {
                 let item = result_types[0]();
                 message.channel.send(core.tag(author) + ', created an item\n' + item.name + ': ' + item.desc);
-                inventories[author].items.push(item);
+                players[author].inventory.items.push(item);
             }
         },
         //TODO: Add descriptions of allowed actions with each item
@@ -272,7 +265,7 @@ module.exports = {
             let room = getRoom(author);
             let name = args.join(' ');
             
-            let items = inventories[author].items.concat(room.props).concat(room.items);
+            let items = players[author].inventory.items.concat(room.props).concat(room.items);
             let results = [];
             for(let i = 0; i < items.length; i++) {
                 let item = items[i];
@@ -288,7 +281,7 @@ module.exports = {
         inventory: function(message, args) {
             let author = message.author.id;
             
-            let items = inventories[author].items;
+            let items = players[author].inventory.items;
             let reply = core.tag(author) + ', ' + items.length + ' items: ' + items.map(item => ('`' + item.name + '`')).join(', ');
             message.channel.send(reply);
         },
@@ -298,7 +291,7 @@ module.exports = {
             let action = args.shift();
             let name = args.join(' ');
             
-            let items = inventories[author].items;
+            let items = players[author].inventory.items;
             let results = [];
             for(let i = 0; i < items.length; i++) {
                 let item = items[i];
@@ -319,7 +312,6 @@ module.exports = {
                 if(f) {
                     f.call(item, message, author, {
                         rooms: rooms,
-                        inventories: inventories,
                         players: players,
                     });
                 } else {
