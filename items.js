@@ -1,11 +1,21 @@
 const hooks = require('./hooks.js');
 const core = require('./core.js');
+
+
+
 const types = {
     example: function() {
         this.name = 'example';
         this.desc = 'example';
         this.use = {
-            example: function(message) {
+            /*
+            data = {
+                rooms: {},
+                inventory: [],
+                players: {}
+            }
+            */
+            example: function(message, data) {
                 message.channel.send('example');
             }
         };
@@ -14,25 +24,46 @@ const types = {
         this.example = 'example';
         return this;
     },
+    stuporcomputer: function() {
+        this.name = 'stuporcomputer';
+        this.desc = 'this personal supercomputer is always stuck for some reason.';
+        this.use = {};
+        this.data = {};
+        this.listeners = {
+            update_room: function(room, data) {
+                if(Math.random() < 0.4) {
+                    let roomPlayers = room.players;
+                    for(let i = 0; i < roomPlayers.length; i++) {
+                        let id = roomPlayers[i];
+                        let player = data.players[id];
+                        let channel = player.channel;
+                        if(channel) channel.send('The stuporcomputer unfreezes for a second only to freeze yet again.');
+                        
+                    }
+                }
+            }
+        };
+        return this;
+    },
     die_std: function() {
         this.name = 'six-sided die';
         this.desc = 'a standard six-sided die';
         this.use = {
-            stats: function(message) {
+            stats: function(message, ownerId, data) {
                 let average = 0;
                 let record = this.data.record;
                 for(let i = 0; i < record.length; i++) {
                     average += record[i];
                 }
                 average /= record.length;
-                message.channel.send(core.tag(message.author.id) + ', You have rolled this bundle of dice ' + record.length + ' times. Your average roll is ' + average);
+                message.channel.send(core.tag(ownerId) + ', You have rolled this bundle of dice ' + record.length + ' times. Your average roll is ' + average);
             },
-            roll: function(message) {
+            roll: function(message, ownerId, data) {
                 let roll = this.roll();
                 this.data.record.push(roll);
-                message.channel.send(core.tag(message.author.id) + ', You roll ' + roll);
+                message.channel.send(core.tag(ownerId) + ', You roll ' + roll);
             },
-            multi: function(message) {
+            multi: function(message, ownerId, data) {
                 let item = this;
                 let actionDesc =  ' Enter an action, or `quit` to finish.';
                 hooks.add({
@@ -70,29 +101,6 @@ const types = {
                 }
                 message.channel.send(reply);
             },
-            throw: function(message) {
-                let item = this;
-                /*
-                if(!hooks.match(hook => {
-                    return hook.itemSource === item;
-                })) {
-
-                } else {
-                    return 'You are in the middle of throwing this die';
-                }
-                */
-
-                //The hook prevents this action from being called before the player specifies a target
-                hooks.add({
-                    targetId: message.author.id,
-                    intercept: function(message) {
-                        message.channel.send('You throw the ' + item.name + ' at ' + message.content + '. It\'s a direct hit!');
-                        this.remove = true;
-                        return true;
-                    }
-                });
-                message.channel.send(core.tag(message.author.id) + ', Throw this die at what?');
-            }
         };
         this.data = {
             record: []
@@ -105,19 +113,19 @@ const types = {
         this.name = 'loaded six-sided die';
         this.desc = 'a loaded six-sided die with a preference for the number 6';
         this.use = {
-            stats: function() {
+            stats: function(message, ownerId, data) {
                 let average = 0;
                 let record = this.data.record;
                 for(let i = 0; i < record.length; i++) {
                     average += record[i];
                 }
                 average /= record.length;
-                return 'You have rolled this bundle of dice ' + record.length + ' times. Your average roll is ' + average;
+                message.channel.send(core.tag(ownerId) + ', ' + 'You have rolled this bundle of dice ' + record.length + ' times. Your average roll is ' + average);
             },
-            roll: function() {
+            roll: function(message, ownerId, data) {
                 let roll = this.roll();
                 this.data.record.push(roll);
-                return 'You roll ' + roll;
+                message.channel.send(core.tag(ownerId) + ', ' + 'You roll ' + roll);
             }
         };
         this.sides = [1, 2, 3, 4, 5, 6];
@@ -129,19 +137,19 @@ const types = {
         this.name = 'bundle of six-sided dice';
         this.desc = 'a bundle of six standard six-sided dice';
         this.use = {
-            stats: function() {
+            stats: function(message, ownerId, data) {
                 let average = 0;
                 let record = this.data.record;
                 for(let i = 0; i < record.length; i++) {
                     average += record[i];
                 }
                 average /= record.length;
-                return 'You have rolled this bundle of dice ' + record.length + ' times. Your average roll is ' + average;
+                message.channel.send(core.tag(ownerId) + ', ' + 'You have rolled this bundle of dice ' + record.length + ' times. Your average roll is ' + average);
             },
-            roll: function() {
+            roll: function(message, ownerId, data) {
                 let roll = this.roll();
                 this.data.record.push(roll);
-                return 'You roll ' + roll;
+                message.channel.send(core.tag(ownerId) + ', You roll ' + roll);
             }
         };
         this.data = {
@@ -171,6 +179,83 @@ const types = {
         };
         return this;
     },
+    lightning_helmet: function() {
+        this.name = 'Lightning Helm';
+        this.desc = 'Benjamin the Barbarian had the novel idea of attaching lightning rods to a metal helm, thus allowing him to transform his brain power into electricity.';
+        this.use = {
+            think: function(message, ownerId, data) {
+                if(this.data.charge > 9) {
+                    message.channel.send(core.tag(ownerId) + ', your Lightning Helm overheats from having too much charge and melts into a cheap statuette of a sponge.');
+                    let items = data.players[ownerId].inventory.items;
+                    items[items.indexOf(this)] = {
+                        name: 'cheap statuette of a sponge',
+                        desc: 'It\'s a statuette of sponge, except it looks more like a half-solidified clump of liquid metal. No wait, it\'s actually just a half-solidified clump of liquid metal that looks like a statuette of sponge',
+                        use: {},
+                        data: {},
+                        listeners: {}
+                    };
+                    return;
+                }
+                this.data.charge++;
+                message.channel.send(core.tag(ownerId) + ', your Lightning Helm gets charged up by your brain power.');
+                
+            },
+            zap: function(message, ownerId) {
+                if(this.data.charge === 0) {
+                    message.channel.send(core.tag(ownerId) + ', your Lightning Helm has 0 charge to zap with.');
+                }
+                message.channel.send(core.tag(ownerId) + ', you attempt to zap something with your Lightning Helm, but instead you get hundreds of volts discharged directly to your brain, giving you a terrible electric shock.');
+                this.data.charge = 0;
+            }
+        };
+        this.data = {
+            charge: 0
+        };
+        return this;
+    },
+    dodge_roll: function() {
+        this.name = 'The Dodge Roll';
+        this.desc = 'Rolling this special die may increase your agility for a while.';
+        this.use = {};
+        this.data = {};
+        return this;
+    },
+    attack_roll: function() {
+        this.name = 'The Attack Roll';
+        this.desc = 'Throw this die at your opponents to make them die!';
+        this.use = {
+            throw: function(message) {
+                let item = this;
+                /*
+                if(!hooks.match(hook => {
+                    return hook.itemSource === item;
+                })) {
+
+                } else {
+                    return 'You are in the middle of throwing this die';
+                }
+                */
+
+                //The hook prevents this action from being called before the player specifies a target, so we don't need to check
+                hooks.add({
+                    targetId: message.author.id,
+                    intercept: function(message) {
+                        let roll = this.dice.roll();
+                        message.channel.send('You throw the ' + item.name + ' at ' + message.content + ', dealing ' + roll + ' damage!');
+                        this.remove = true;
+                        return true;
+                    }
+                });
+                message.channel.send(core.tag(message.author.id) + ', Throw this die at what?');
+            }
+        };
+        this.data = {};
+        this.dice = {
+            sides: [1, 2, 3, 4, 5, 6],
+            roll: function() { return this.sides[Math.floor(Math.random() * this.sides.length)]; }
+        };
+        return this;
+    }
 };
 const typesByName = {};
 //Store each item type under its actual name

@@ -5,9 +5,63 @@ const itemtypes = require('./items.js');
 const ROOMS_FILE = config.dir_up + '\\rooms.json';
 const INVENTORIES_FILE = config.dir_up + '\\inventories.json';
 const PLAYERS_FILE = config.dir_up + '\\players.json';
-
+const Room = function(source) {
+    this.name = source.name || 'name';
+    this.desc = source.desc || 'desc';
+    this.players = source.players || [];
+    this.props = source.props || [];
+    this.items = source.items || [];
+    this.exits = source.exits || {};
+    
+    let me = this;
+    this.update = function() {
+        console.log('update()');
+        for(let id in players) {
+            let channel = players[id].channel;
+            if(channel) channel.send('Time passes');
+        }
+        let objects = this.props.concat(this.items);
+        for(let i = 0; i < objects.length; i++) {
+            let object = objects[i];
+            if(!object.listeners)
+                console.log('Warning: ' + object.name + '.listeners is undefined');
+            else if(!object.listeners.update_room)
+                console.log('Warning: ' + object.name + '.listeners.update_room is undefined');
+            else
+                object.listeners.update_room.call(object, this, {
+                    rooms: rooms,
+                    players: players,
+                });
+        }
+    };
+    this.updateTimer = null;
+    this.updateStepsLeft = 0;
+    this.updateContinuous = function() {
+        console.log('updateContinuous()');
+        this.update();
+        this.updateStepsLeft--;
+        console.log('updateStepsLeft: ' + this.updateStepsLeft);
+        if(this.updateStepsLeft > 0) {
+            console.log('Setting up next update timer');
+            let me = this;
+            this.updateTimer = setTimeout(function() { me.updateContinuous.call(me); }, 2000);
+            console.log('Set up next update timer');
+        } else {
+            delete this.updateTimer;
+        }
+    };
+    this.setUpdating = function(steps = 5) {
+        console.log('setUpdating()');
+        
+        this.updateStepsLeft = steps;
+        if(!this.updateTimer) {
+            console.log('Setting up next update timer');
+            this.updateTimer = setTimeout(function() { me.updateContinuous.call(me); }, 2000);
+        }
+    };
+}
 let rooms = {
-    name: {
+    name: new Room({
         name: 'name',
         desc: 'desc',
         players: [],
@@ -26,28 +80,29 @@ let rooms = {
         exits: {
             name: 'destination'
         }
-    },
-    start: {
+    }),
+    start: new Room({
         name: 'ArchROCK Customs Office',
-        desc: 'aaaaaaaa',
+        desc: 'This is less of a Customs Office and more like a PvP arena where players go to farm EXP on idlers and where idlers go to get killed and over again.',
         players: [],
         props: [
+            new itemtypes.types.stuporcomputer(),
             {
-                name: 'prop',
-                desc: 'desc'
+                name: 'cardboard customs officer',
+                desc: 'This cardboard cutout of a customs officer is designed to be placed next to a door to discourage suspicious people from sneaking out of the Customs Office'
             }
         ],
         items: [
             {
-                name: 'item',
-                desc: 'desc'
+                name: 'customer',
+                desc: 'This citizen of ArchROCK follows local customs.'
             }
         ],
         exits: {
             "front door": 'nowhere'
         }
-    },
-    nowhere: {
+    }),
+    nowhere: new Room({
         name: 'Nowhere 3000',
         desc: 'Welcome to the future of Nowhere! Cool, isn\'t it?',
         players: [],
@@ -66,7 +121,7 @@ let rooms = {
         exits: {
             "front door": 'start'
         }
-    }
+    })
     
 };
 //Stores character information for players who run multiple characters
@@ -87,7 +142,7 @@ let players = {
         }
     }
 };
-const Player = function(nick) {
+const Player = function(nick, channel) {
     this.active = true;
     this.nick = nick;
     this.location = 'start';
@@ -98,9 +153,11 @@ const Player = function(nick) {
         items: [
                     new itemtypes.types.die_std(),
                     new itemtypes.types.die_loaded(),
-                    new itemtypes.types.bundle_die_std()
+                    new itemtypes.types.bundle_die_std(),
+                    new itemtypes.types.lightning_helmet()
         ]
-    }
+    };
+    this.channel = channel;
 }
 const listeners = {
     //We pass in the player ID as 'this'
@@ -144,6 +201,9 @@ module.exports = {
         if((!players[author] || !players[author].active) && command !== 'login') {
             message.channel.send(core.tag(author) + ', please login first.');
             return false;
+        } else if(players[author]) {
+            //Update the player's channel
+            players[author].channel = message.channel || message.author;
         }
         return true;
     },
@@ -159,7 +219,7 @@ module.exports = {
                 }
                 message.channel.send(core.tag(author) + ', logged in as new player.');
                 
-                players[author] = new Player(nick);
+                players[author] = new Player(nick, message.channel || message.author);
                 rooms.start.players.push(author);
             } else if(player.active) {
                 message.channel.send(core.tag(author) + ', you are already logged in.');
@@ -215,6 +275,7 @@ module.exports = {
             let text = args.join(' ');
             let author = message.author.id;
             let room = getRoom(author);
+            
             for(let i = 0; i < room.players.length; i++) {
                 let playerId = room.players[i];
                 let player = players[playerId];
@@ -235,6 +296,11 @@ module.exports = {
                     item.listeners.say_owner.call(item, message, text);
                 }
             }
+        },
+        wait: function(message, args) {
+            let steps = parseInt(args[0]) || 5;
+            let room = getRoom(message.author.id);
+            room.setUpdating.call(room, steps);
         },
         
         create: function(message, args) {
@@ -274,7 +340,7 @@ module.exports = {
                 }
             }
             let reply = core.tag(author) + ', ' + results.length + ' results found.';
-            reply += '\n' + results.map(item => ('`' + item.name + '`' + ': ' + item.desc + (!item.use ? '' : (' (Use: ' + Object.keys(item.use).map(use => ('`' + use + '`')).join(', ') + ')')))).join('\n');
+            reply += '\n' + results.map(item => ('`' + item.name + '`' + ': ' + item.desc + ((!item.use || item.use.length === 0) ? '' : (' (Use: ' + Object.keys(item.use).map(use => ('`' + use + '`')).join(', ') + ')')))).join('\n');
             message.channel.send(reply);
             
         },
