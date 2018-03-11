@@ -1,6 +1,7 @@
 const config = require('../config.json');
 const core = require('./core.js');
 const itemtypes = require('./items.js');
+const mobtypes = require('./mobs.js');
 
 const ROOMS_FILE = config.dir_up + '\\rooms.json';
 const INVENTORIES_FILE = config.dir_up + '\\inventories.json';
@@ -9,6 +10,7 @@ const Room = function(source) {
     this.name = source.name || 'name';
     this.desc = source.desc || 'desc';
     this.players = source.players || [];
+    this.mobs = source.mobs || [];
     this.props = source.props || [];
     this.items = source.items || [];
     this.exits = source.exits || {};
@@ -16,11 +18,13 @@ const Room = function(source) {
     let me = this;
     this.update = function() {
         console.log('update()');
+        /*
         for(let id in players) {
             let channel = players[id].channel;
             if(channel) channel.send('Time passes');
         }
-        let objects = this.props.concat(this.items);
+        */
+        let objects = this.mobs.concat(this.props).concat(this.items);
         for(let i = 0; i < objects.length; i++) {
             let object = objects[i];
             if(!object.listeners)
@@ -36,7 +40,9 @@ const Room = function(source) {
     };
     this.updateTimer = null;
     this.updateStepsLeft = 0;
+    this.updatePauseCallback = function() {};
     this.updateContinuous = function() {
+        delete this.updateTimer;
         console.log('updateContinuous()');
         this.update();
         this.updateStepsLeft--;
@@ -44,19 +50,21 @@ const Room = function(source) {
         if(this.updateStepsLeft > 0) {
             console.log('Setting up next update timer');
             let me = this;
-            this.updateTimer = setTimeout(function() { me.updateContinuous.call(me); }, 2000);
+            this.updateTimer = setTimeout(function() { me.updateContinuous.call(me); }, 200);
             console.log('Set up next update timer');
         } else {
-            delete this.updateTimer;
+            this.updatePauseCallback();
         }
     };
-    this.setUpdating = function(steps = 5) {
+    this.setUpdating = function(minSteps = 5) {
         console.log('setUpdating()');
         
-        this.updateStepsLeft = steps;
-        if(!this.updateTimer) {
-            console.log('Setting up next update timer');
-            this.updateTimer = setTimeout(function() { me.updateContinuous.call(me); }, 2000);
+        if(this.updateStepsLeft < minSteps) {
+            this.updateStepsLeft = minSteps;
+            if(!this.updateTimer) {
+                console.log('Setting up next update timer');
+                this.updateTimer = setTimeout(function() { me.updateContinuous.call(me); }, 200);
+            }
         }
     };
 }
@@ -131,7 +139,7 @@ let characters_other = {
 let players = {
     id: {
         active: true,
-        nick: 'nick',
+        name: 'name',
         location: '',
         inventory: {
             items: [
@@ -142,9 +150,9 @@ let players = {
         }
     }
 };
-const Player = function(nick, channel) {
+const Player = function(name, channel) {
     this.active = true;
-    this.nick = nick;
+    this.name = name;
     this.location = 'start';
     this.listeners = {
         room_say: listeners.default_say_room,
@@ -168,7 +176,7 @@ const listeners = {
         if(parseInt(this) === parseInt(source)) {
             message.channel.send(core.tag(source) + ', You say: ' + text);
         } else {
-            message.channel.send(core.tag(source) + ', You hear `' + players[source].nick + '` say: ' + text);
+            message.channel.send(core.tag(source) + ', You hear `' + players[source].name + '` say: ' + text);
         }
     }
 };
@@ -212,14 +220,14 @@ module.exports = {
             let author = message.author.id;
             let player = players[author];
             if(!player) {
-                let nick = args[0] || '';
-                if(!nick) {
-                    message.channel.send(core.tag(author) + ', specify nick.');
+                let name = args[0] || '';
+                if(!name) {
+                    message.channel.send(core.tag(author) + ', specify name.');
                     return;
                 }
                 message.channel.send(core.tag(author) + ', logged in as new player.');
                 
-                players[author] = new Player(nick, message.channel || message.author);
+                players[author] = new Player(name, message.channel || message.author);
                 rooms.start.players.push(author);
             } else if(player.active) {
                 message.channel.send(core.tag(author) + ', you are already logged in.');
@@ -246,9 +254,22 @@ module.exports = {
             let reply = '**' + room.name + '**';
             reply += '\n' + '*' + room.desc + '*';
             reply += '\n';
-            reply += '\nPlayers: ' + room.players.map(player => players[player]).filter(player => !player.hidden).map(player => ('`' + player.nick + '`')).join(', ');
-            reply += '\nProps: ' + room.props.filter(prop => !prop.hidden).map(prop => ('`' + prop.name + '`')).join(', ');
-            reply += '\nItems: ' + room.items.filter(item => !item.hidden).map(item => ('`' + item.name + '`')).join(', ');
+            let players_visible = room.players.map(player => players[player]).filter(player => !player.hidden);
+            reply += (players_visible.length > 0)
+                ? ('\nPlayers: ' + players_visible.map(player => ('`' + player.name + '`')).join(', '))
+                : ('\nNo visible players here');
+            let mobs_visible = room.mobs.filter(mob => !mob.hidden);
+            reply += (mobs_visible.length > 0)
+                ? ('\nMobs: ' + mobs_visible.map(mob => ('`' + mob.name + '`')).join(', '))
+                : ('\nNo visible mobs here.');
+            let props_visible = room.props.filter(prop => !prop.hidden);
+            reply += (props_visible.length > 0)
+                ? ('\nProps: ' + props_visible.map(prop => ('`' + prop.name + '`')).join(', '))
+                : ('\nNo visible props here');
+            let items_visible = room.items.filter(item => !item.hidden);
+            reply += (items_visible.length > 0)
+                ? ('\nItems: ' + items_visible.map(item => ('`' + item.name + '`')).join(', '))
+                : ('\nNo visible items here');
             reply += '\nExits: ' + Object.keys(room.exits).filter(exit => !room.exits[exit].hidden).map(exit => ('`' + exit + '`'));
             message.channel.send(reply);
         },
@@ -298,32 +319,59 @@ module.exports = {
             }
         },
         wait: function(message, args) {
-            let steps = parseInt(args[0]) || 5;
+            let steps = parseInt(args[0]) || 50;
             let room = getRoom(message.author.id);
             room.setUpdating.call(room, steps);
+            message.channel.send('Time unpaused');
+            room.updatePauseCallback = () => { message.channel.send('Time paused'); };
         },
         
         create: function(message, args) {
             let author = message.author.id;
             
-            let criterion = args.join(' ') || '';
-            let result_types = [];
-            for(let name in itemtypes.typesByName) {
-                if(name.startsWith(criterion)) {
-                    result_types.push(itemtypes.typesByName[name]);
+            let type = args.shift();
+            if(type === 'item') {
+                let criterion = args.join(' ') || '';
+                let result_types = [];
+                for(let name in itemtypes.typesByName) {
+                    if(name.startsWith(criterion)) {
+                        result_types.push(itemtypes.typesByName[name]);
+                    }
+                }
+                if(result_types.length === 0) {
+                    message.channel.send(core.tag(author) + ', item not found');
+                } else if(result_types.length > 1) {
+                    let reply = core.tag(author) + ', ' + results.length + ' create which item?';
+                    reply += '\n' + result_types.map(type => ('`' + type.name + '`' + ': ' + type.desc)).join('\n');
+                    message.channel.send(reply);
+                } else {
+                    let item = new result_types[0]();
+                    message.channel.send(core.tag(author) + ', created an item\n' + item.name + ': ' + item.desc);
+                    players[author].inventory.items.push(item);
+                }
+            } else if(type === 'prop') {
+                
+            } else if(type === 'mob') {
+                let criterion = args.join(' ') || '';
+                let result_types = [];
+                for(let name in mobtypes.typesByName) {
+                    if(name.startsWith(criterion)) {
+                        result_types.push(mobtypes.typesByName[name]);
+                    }
+                }
+                if(result_types.length === 0) {
+                    message.channel.send(core.tag(author) + ', mob not found');
+                } else if(result_types.length > 1) {
+                    let reply = core.tag(author) + ', ' + results.length + ' create which mob?';
+                    reply += '\n' + result_types.map(type => ('`' + type.name + '`' + ': ' + type.desc)).join('\n');
+                    message.channel.send(reply);
+                } else {
+                    let mob = new result_types[0]();
+                    message.channel.send(core.tag(author) + ', created a mob\n' + mob.name + ': ' + mob.desc);
+                    getRoom(message.author.id).mobs.push(mob);
                 }
             }
-            if(result_types.length === 0) {
-                message.channel.send(core.tag(author) + ', item not found');
-            } else if(result_types.length > 1) {
-                let reply = core.tag(author) + ', ' + results.length + ' create which item?';
-                reply += '\n' + result_types.map(type => ('`' + type.name + '`' + ': ' + type.desc)).join('\n');
-                message.channel.send(reply);
-            } else {
-                let item = result_types[0]();
-                message.channel.send(core.tag(author) + ', created an item\n' + item.name + ': ' + item.desc);
-                players[author].inventory.items.push(item);
-            }
+            
         },
         //TODO: Add descriptions of allowed actions with each item
         examine: function(message, args) {
@@ -331,7 +379,7 @@ module.exports = {
             let room = getRoom(author);
             let name = args.join(' ');
             
-            let items = players[author].inventory.items.concat(room.props).concat(room.items);
+            let items = players[author].inventory.items.concat(room.mobs).concat(room.props).concat(room.items);
             let results = [];
             for(let i = 0; i < items.length; i++) {
                 let item = items[i];
