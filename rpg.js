@@ -33,7 +33,6 @@ const Room = function(source) {
         */
         let objects = this.mobs.concat(this.props).concat(this.items);
         objects.forEach(object => {
-            let object = objects[i];
             if(!object.listeners) {
                 //console.log('Warning: ' + object.name + '.listeners is undefined');
             } else if(!object.listeners.update_room) {
@@ -160,7 +159,8 @@ const Player = function(id, name, channel) {
         damage: listeners.default_damage,
     };
     this.stats = {
-        health: 60
+        health: 60,
+        baseDamage: 4
     }
     this.inventory = {
         items: [
@@ -250,7 +250,28 @@ module.exports = {
             message.channel.send(core.tag(author) + ', logged out.');
         },
         attack: function(message, args) {
+            let author = message.author.id;
+            let player = players[author];
+            let room = getRoom(author);
+            let target = args.join(' ');
             
+            let characters = room.players.map(playerId => players[playerId]).concat(room.mobs);
+            let character = characters.find(character => (character.name === target));
+            if(character) {
+                character.stats.health -= player.stats.baseDamage;
+                message.channel.send(core.tag(author) + ', you attack ' + character.name + ' for ' + player.stats.baseDamage + ' damage.');
+                if(character.stats.health < 1) {
+                    let index;
+                    if(index = room.mobs.indexOf(character)) {
+                        room.mobs.splice(index, 1);
+                    } else if(index = room.players.indexOf(character.id)) {
+                        room.players.splice(index, 1);
+                    }
+                    message.channel.send(character.name + ' dies from the attack!');
+                }
+            } else {
+                message.channel.send(core.tag(author) + ', I cannot find that character.');
+            }
         },
         equip: function(message, args) {
             
