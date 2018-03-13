@@ -390,7 +390,6 @@ module.exports = {
             let reply = core.tag(author) + ', ' + results.length + ' results found.';
             reply += '\n' + results.map(object => ('`' + object.name + '`' + ': ' + object.desc + ((!object.use || object.use.length === 0) ? '' : (' (Use: ' + Object.keys(object.use).map(use => ('`' + use + '`')).join(', ') + ')')))).join('\n');
             message.channel.send(reply);
-            
         },
         inventory: function(message, args) {
             let author = message.author.id;
@@ -412,6 +411,53 @@ module.exports = {
                 message.channel.send(reply);
             }
         },
+        remove: function(message, args) {
+            let author = message.author.id;
+            let room = getRoom(author);
+            let type = args.shift();
+            if(type === 'item') {
+                let criterion = args.join(' ') || '';
+                let results = room.items.filter(item => (item.name.startsWith(criterion)));
+                if(results.length === 0) {
+                    message.channel.send(core.tag(author) + ', item not found');
+                } else if(results.length > 1) {
+                    let reply = core.tag(author) + ', ' + results.length + ' results found. Remove which item?';
+                    reply += '\n' + results.map(item => ('`' + item.name + '`' + ': ' + item.desc)).join('\n');
+                    message.channel.send(reply);
+                } else {
+                    let item = results[0];
+                    message.channel.send(core.tag(author) + ', removed an item\n' + item.name + ': ' + item.desc);
+                    room.items.splice(room.items.indexOf(item), 1);
+                }
+            } else if(type === 'prop') {
+                let criterion = args.join(' ') || '';
+                let results = room.props.filter(prop => (prop.name.startsWith(criterion)));
+                if(results.length === 0) {
+                    message.channel.send(core.tag(author) + ', prop not found');
+                } else if(results.length > 1) {
+                    let reply = core.tag(author) + ', ' + results.length + ' results found. Remove which prop?';
+                    reply += '\n' + results.map(prop => ('`' + prop.name + '`' + ': ' + prop.desc)).join('\n');
+                    message.channel.send(reply);
+                } else {
+                    let prop = results[0];
+                    message.channel.send(core.tag(author) + ', removed an prop\n' + prop.name + ': ' + prop.desc);
+                    room.props.splice(room.props.indexOf(prop), 1);
+                }
+            } else if(type === 'mob') {
+                let criterion = args.join(' ') || '';
+                let results = room.mobs.filter(mob => (mob.name.startsWith(criterion)));
+                if(results.length === 0) {
+                    message.channel.send(core.tag(author) + ', mob not found');
+                } else if(results.length > 1) {
+                    let reply = core.tag(author) + ', ' + results.length + ' results found. Remove which mob?';
+                    reply += '\n' + results.map(mob => ('`' + mob.name + '`' + ': ' + mob.desc)).join('\n');
+                    message.channel.send(reply);
+                } else {
+                    let mob = results[0];
+                    message.channel.send(core.tag(author) + ', removed a mob\n' + mob.name + ': ' + mob.desc);
+                    room.mobs.splice(room.mobs.indexOf(mob), 1);
+                }
+            }
         },
         use: function(message, args) {
             let author = message.author.id;
