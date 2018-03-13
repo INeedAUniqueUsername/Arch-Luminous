@@ -47,6 +47,17 @@ module.exports = {
             }
             message.channel.send(args.join(' '));
         },
+        eval: function(message, args) {
+            if(message.author.id !== CONFIG.archId) {
+                message.channel.send(core.tag(message.author.id) + ', do I know you?');
+                return;
+            }
+            try {
+                message.channel.send(core.tag(message.author.id) + ', ' + eval(args.join(' ')));
+            } catch(e) {
+                message.channel.send(core.tag(message.author.id) + ', error: ' + e);
+            }
+        },
         lisp: function(message, args) {
             if(message.author.id !== CONFIG.archId) {
                 message.channel.send(core.tag(message.author.id) + ', do I know you?');
@@ -61,6 +72,17 @@ module.exports = {
                 message.channel.send(core.tag(message.author.id) + ', ' + result);
             } catch(error) {
                 message.channel.send(core.tag(message.author.id) + ', ' + error);
+            }
+        },
+        parse: function(message, args) {
+            if(message.author.id !== CONFIG.archId) {
+                message.channel.send(core.tag(message.author.id) + ', do I know you?');
+                return;
+            }
+            try {
+                message.channel.send(core.tag(message.author.id) + ', ' + JSON.parse(args.join(' ')));
+            } catch(e) {
+                message.channel.send(core.tag(message.author.id) + ', error: ' + e);
             }
         },
         sponge: function(message, args) {
