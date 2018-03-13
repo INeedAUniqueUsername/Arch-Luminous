@@ -6,6 +6,13 @@ const mobtypes = require('./mobs.js');
 const ROOMS_FILE = config.dir_up + '\\rooms.json';
 const INVENTORIES_FILE = config.dir_up + '\\inventories.json';
 const PLAYERS_FILE = config.dir_up + '\\players.json';
+
+/*
+R!login a
+R!create mob mob boss
+R!wait
+*/
+
 const Room = function(source) {
     this.name = source.name || 'name';
     this.desc = source.desc || 'desc';
@@ -17,7 +24,7 @@ const Room = function(source) {
     
     let me = this;
     this.update = function() {
-        console.log('update()');
+        //console.log('update()');
         /*
         for(let id in players) {
             let channel = players[id].channel;
@@ -43,26 +50,26 @@ const Room = function(source) {
     this.updatePauseCallback = function() {};
     this.updateContinuous = function() {
         delete this.updateTimer;
-        console.log('updateContinuous()');
+        //console.log('updateContinuous()');
         this.update();
         this.updateStepsLeft--;
-        console.log('updateStepsLeft: ' + this.updateStepsLeft);
+        //console.log('updateStepsLeft: ' + this.updateStepsLeft);
         if(this.updateStepsLeft > 0) {
-            console.log('Setting up next update timer');
+            //console.log('Setting up next update timer');
             let me = this;
             this.updateTimer = setTimeout(function() { me.updateContinuous.call(me); }, 200);
-            console.log('Set up next update timer');
+            //console.log('Set up next update timer');
         } else {
             this.updatePauseCallback();
         }
     };
     this.setUpdating = function(minSteps = 5) {
-        console.log('setUpdating()');
+        //console.log('setUpdating()');
         
         if(this.updateStepsLeft < minSteps) {
             this.updateStepsLeft = minSteps;
             if(!this.updateTimer) {
-                console.log('Setting up next update timer');
+                //console.log('Setting up next update timer');
                 this.updateTimer = setTimeout(function() { me.updateContinuous.call(me); }, 200);
             }
         }
