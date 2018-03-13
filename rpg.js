@@ -74,7 +74,12 @@ const Room = function(source) {
             }
         }
     };
-}
+    this.announce = function(text) {
+        this.players.map(id => players[id].channel).forEach(channel => {
+            if(channel) channel.send(text);
+        });
+    };
+};
 let rooms = {
     name: new Room({
         name: 'name',
