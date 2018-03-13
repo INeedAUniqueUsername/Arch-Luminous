@@ -59,6 +59,13 @@ const coreFunctions = {
         }
         message.channel.send(reply);
     },
+    multi: function(message, args) {
+        let lines = message.content.split('\n').slice(1);
+        for(let i = 0; i < lines.length; i++) {
+            message.content = lines[i];
+            read(message);
+        }
+    },
     sd: function(message, args) {
         if(message.author.id === CONFIG.archId) {
             message.channel.send('Self destruct sequence activated.');
