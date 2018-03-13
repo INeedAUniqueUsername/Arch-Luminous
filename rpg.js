@@ -280,6 +280,23 @@ module.exports = {
             reply += '\nExits: ' + Object.keys(room.exits).filter(exit => !room.exits[exit].hidden).map(exit => ('`' + exit + '`'));
             message.channel.send(reply);
         },
+        get: function(message, args) {
+            let author = message.author.id;
+            let player = players[author];
+            let room = getRoom(author);
+            let items = room.items;
+            let target = args.join(' ');
+            for(let i = 0; i < items.length; i++) {
+                let item = items[i];
+                if(item.name === target) {
+                    room.items.splice(i, 1);
+                    player.inventory.items.push(item);
+                    message.channel.send(core.tag(author) + ', you got ' + item.name);
+                    return;
+                }
+            }
+            message.channel.send(core.tag(author) + ', I can\'t find that item');
+        },
         go: function(message, args) {
             let author = message.author.id;
             let exit = args.join(' ');
