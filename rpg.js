@@ -43,7 +43,8 @@ const Room = function(source) {
                     rooms: rooms,
                     players: players,
                 });
-        }
+            }
+        });
     };
     this.updateTimer = null;
     this.updateStepsLeft = 0;
@@ -148,27 +149,19 @@ let rooms = {
 let characters_other = {
     playerId: []    //List of additional player objects associated with the player
 };
-let players = {
-    id: {
-        active: true,
-        name: 'name',
-        location: '',
-        inventory: {
-            items: [
-                        new itemtypes.types.die_std(),
-                        new itemtypes.types.die_loaded(),
-                        new itemtypes.types.bundle_die_std()
-            ]
-        }
-    }
-};
-const Player = function(name, channel) {
+let players = {};
+const Player = function(id, name, channel) {
+    this.id = id;
     this.active = true;
     this.name = name;
     this.location = 'start';
     this.listeners = {
-        room_say: listeners.default_say_room,
+        say_room: listeners.default_say_room,
+        damage: listeners.default_damage,
     };
+    this.stats = {
+        health: 60
+    }
     this.inventory = {
         items: [
                     new itemtypes.types.die_std(),
@@ -180,15 +173,17 @@ const Player = function(name, channel) {
     this.channel = channel;
 }
 const listeners = {
-    //We pass in the player ID as 'this'
-    default_say_room: function(message, text) {
-        let source = message.author.id;
-        console.log('You:    ' + this);
-        console.log('Source: ' + source);
-        if(parseInt(this) === parseInt(source)) {
-            message.channel.send(core.tag(source) + ', You say: ' + text);
-        } else {
-            message.channel.send(core.tag(source) + ', You hear `' + players[source].name + '` say: ' + text);
+    //We pass in the player object as 'this'
+    default_say_room: function(source, text) {
+        console.log('You:    ' + this.id);
+        console.log('Source: ' + source.id);
+        this.channel.send(source.name + ' says: ' + text);
+    },
+    default_damage: function(points) {
+        this.stats.health -= points;
+        this.channel.send(this.name + ' takes ' + points + ' points of damage');
+        if(this.stats.health < 1) {
+            //this.channel.send(this.name + ' dies from the attack!');
         }
     }
 };
@@ -239,7 +234,7 @@ module.exports = {
                 }
                 message.channel.send(core.tag(author) + ', logged in as new player.');
                 
-                players[author] = new Player(name, message.channel || message.author);
+                players[author] = new Player(author, name, message.channel || message.author);
                 rooms.start.players.push(author);
             } else if(player.active) {
                 message.channel.send(core.tag(author) + ', you are already logged in.');
