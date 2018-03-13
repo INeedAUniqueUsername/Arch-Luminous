@@ -152,9 +152,7 @@ me.on('ready', function() {
     cerebrum.ready();
     rpg.ready();
 });
-me.on('message', function(message) {
-    if(asleep)
-        return;
+let read = function(message) {
     if(message.author.id === CONFIG.meId) {
         if(message.content.startsWith(self_prefix)) {
             message.delete(0);
@@ -180,7 +178,7 @@ me.on('message', function(message) {
     } else if(cerebrum.respond(message)) {
         return;
     }
-    
+    /*
     for(let i = 0; i < COMMAND_MODULES.length; i++) {
         let module = COMMAND_MODULES[i];
         if(input.startsWith(module.prefix)) {
@@ -188,5 +186,12 @@ me.on('message', function(message) {
             break;
         }
     }
+    */
+    run(message, input);
+}
+me.on('message', function(message) {
+    if(asleep)
+        return;
+    read(message);
 });
 me.login(CONFIG.token);
