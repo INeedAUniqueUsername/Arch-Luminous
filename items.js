@@ -2,9 +2,12 @@ const hooks = require('./hooks.js');
 const core = require('./core.js');
 
 
-
 const types = {
     example: function() {
+        //Auto-assigned at program start
+        this.alias = 'example';
+        this.type = types.example;
+        
         this.name = 'example';
         this.desc = 'example';
         this.use = {
@@ -261,6 +264,10 @@ const typesByName = {};
 //Store each item type under its actual name
 for(let key in types) {
     let type = types[key];
+    
+    type.prototype.type = type;
+    type.prototype.alias = key;
+    
     typesByName[type().name] = type;
 }
 module.exports.types = types;
