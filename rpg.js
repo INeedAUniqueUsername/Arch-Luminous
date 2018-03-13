@@ -32,13 +32,13 @@ const Room = function(source) {
         }
         */
         let objects = this.mobs.concat(this.props).concat(this.items);
-        for(let i = 0; i < objects.length; i++) {
+        objects.forEach(object => {
             let object = objects[i];
-            if(!object.listeners)
-                console.log('Warning: ' + object.name + '.listeners is undefined');
-            else if(!object.listeners.update_room)
-                console.log('Warning: ' + object.name + '.listeners.update_room is undefined');
-            else
+            if(!object.listeners) {
+                //console.log('Warning: ' + object.name + '.listeners is undefined');
+            } else if(!object.listeners.update_room) {
+                //console.log('Warning: ' + object.name + '.listeners.update_room is undefined');
+            } else {
                 object.listeners.update_room.call(object, this, {
                     rooms: rooms,
                     players: players,
@@ -302,19 +302,16 @@ module.exports = {
         say: function(message, args) {
             let text = args.join(' ');
             let author = message.author.id;
+            let source = players[author];
             let room = getRoom(author);
-            
-            for(let i = 0; i < room.players.length; i++) {
-                let playerId = room.players[i];
-                let player = players[playerId];
-                if(player.listeners.room_say) {
-                    player.listeners.room_say.call(playerId, message, text);
+            room.players.map(playerId => players[playerId]).forEach(player => {
+                let say_room = player.listeners.say_room;
+                if(say_room) {
+                    say_room.call(player, source, text);
                 }
-            }
+            });
             
-            let items = players[author].inventory.items;
-            for(let i = 0; i < items.length; i++) {
-                let item = items[i];
+            player.inventory.items.forEach(item => {
                 if(!item.listeners) {
                     console.log('Warning: ' + item.name + '.listeners is undefined');
                 } else if(!item.listeners.say_owner) {
@@ -339,12 +336,7 @@ module.exports = {
             let type = args.shift();
             if(type === 'item') {
                 let criterion = args.join(' ') || '';
-                let result_types = [];
-                for(let name in itemtypes.typesByName) {
-                    if(name.startsWith(criterion)) {
-                        result_types.push(itemtypes.typesByName[name]);
-                    }
-                }
+                let result_types = Object.keys(itemtypes.typesByName).filter(name => (name.startsWith(criterion))).map(name => itemtypes.typesByName[name]);
                 if(result_types.length === 0) {
                     message.channel.send(core.tag(author) + ', item not found');
                 } else if(result_types.length > 1) {
@@ -386,16 +378,10 @@ module.exports = {
             let room = getRoom(author);
             let name = args.join(' ');
             
-            let items = players[author].inventory.items.concat(room.mobs).concat(room.props).concat(room.items);
-            let results = [];
-            for(let i = 0; i < items.length; i++) {
-                let item = items[i];
-                if(item.name === name) {
-                    results.push(item);
-                }
-            }
+            let objects = players[author].inventory.items.concat(room.mobs).concat(room.props).concat(room.items);
+            let results = objects.filter(object => (object.name === name));
             let reply = core.tag(author) + ', ' + results.length + ' results found.';
-            reply += '\n' + results.map(item => ('`' + item.name + '`' + ': ' + item.desc + ((!item.use || item.use.length === 0) ? '' : (' (Use: ' + Object.keys(item.use).map(use => ('`' + use + '`')).join(', ') + ')')))).join('\n');
+            reply += '\n' + results.map(object => ('`' + object.name + '`' + ': ' + object.desc + ((!object.use || object.use.length === 0) ? '' : (' (Use: ' + Object.keys(object.use).map(use => ('`' + use + '`')).join(', ') + ')')))).join('\n');
             message.channel.send(reply);
             
         },
@@ -413,19 +399,10 @@ module.exports = {
             let name = args.join(' ');
             
             let items = players[author].inventory.items;
-            let results = [];
-            for(let i = 0; i < items.length; i++) {
-                let item = items[i];
-                if(item.name === name) {
-                    results.push(item);
-                }
-            }
+            let results = items.filter(item => (item.name === name));
             if(results.length > 1) {
                 let reply = core.tag(author) + ', ' + results.length + ' use which item?';
-                for(let i = 0; i < results.length; i++) {
-                    let item = results[i];
-                    reply += '\n' + item.name + ': ' + item.desc;
-                }
+                reply += results.map(item => ('\n' + item.name + ': ' + item.desc));
                 message.channel.send(reply);
             } else if(results.length === 1) {
                 let item = results[0];
