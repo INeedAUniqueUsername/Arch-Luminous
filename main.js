@@ -128,9 +128,13 @@ const run = function(message, input, command_module) {
     } else {
         for(let i = 0; i < COMMAND_MODULES.length; i++) {
             let module = COMMAND_MODULES[i];
-            if(f = module.commands[command]) {
+            let prefix = module.prefix.toLowerCase();
+            if(command.startsWith(prefix)) {
+                command = command.slice(prefix.length);
                 command_module = module;
-                break;
+                if(f = module.commands[command]) {
+                    break;
+                }
             }
         }
     }
@@ -139,7 +143,8 @@ const run = function(message, input, command_module) {
             f(message, input);
         }
     } else {
-        message.channel.send(core.tag(message.author.id) + ', unknown command `' + command + '`');
+        if(command_module)
+            message.channel.send(core.tag(message.author.id) + ', unknown command `' + command + '`');
     }
 };
 me.on('ready', function() {
