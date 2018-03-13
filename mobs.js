@@ -1,17 +1,31 @@
 const hooks = require('./hooks.js');
 const core = require('./core.js');
+const itemtypes = require('./items.js');
 
-
-
+const bases = {
+    standard: function() {
+        //Standard base; initializes inventory and listeners to empty
+        this.inventory = {
+            items: []
+        };
+        this.listeners = {};
+    }
+}
 const types = {
     example: function() {
+        bases.standard.call(this);
+        
+        //Auto-assigned at program start
+        this.alias = 'example';
         this.type = types.example;
+        
         this.name = 'example';
         this.desc = 'example';
         return this;
     },
     mob_boss: function() {
-        this.type = types.mob_boss;
+        bases.standard.call(this);
+        
         this.name = 'mob boss';
         this.desc = 'this evil dude likes to create huge angry mobs just because he can!';
         this.attackCooldown = 0;    //ms until next attack
@@ -39,7 +53,8 @@ const types = {
         return this;
     },
     angry: function() {
-        this.type = types.angry;
+        bases.standard.call(this);
+        
         this.name = 'angry';
         this.desc = 'the integral part of every angry mob';
         this.attackCooldown = 0;    //ms until next attack
@@ -63,6 +78,10 @@ const typesByName = {};
 //Store each item type under its actual name
 for(let key in types) {
     let type = types[key];
+    
+    type.prototype.alias = key;
+    type.prototype.type = type;
+    
     typesByName[type().name] = type;
 }
 module.exports.types = types;
