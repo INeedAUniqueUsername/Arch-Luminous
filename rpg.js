@@ -320,7 +320,7 @@ module.exports = {
                     console.log(item.name + '.listeners.say_owner called');
                     item.listeners.say_owner.call(item, message, text);
                 }
-            }
+            });
         },
         wait: function(message, args) {
             let steps = parseInt(args[0]) || 50;
@@ -332,7 +332,7 @@ module.exports = {
         
         create: function(message, args) {
             let author = message.author.id;
-            
+            let room = getRoom(message.author.id);
             let type = args.shift();
             if(type === 'item') {
                 let criterion = args.join(' ') || '';
@@ -340,34 +340,41 @@ module.exports = {
                 if(result_types.length === 0) {
                     message.channel.send(core.tag(author) + ', item not found');
                 } else if(result_types.length > 1) {
-                    let reply = core.tag(author) + ', ' + results.length + ' create which item?';
+                    let reply = core.tag(author) + ', ' + results.length + ' results fouund. Create which item?';
                     reply += '\n' + result_types.map(type => ('`' + type.name + '`' + ': ' + type.desc)).join('\n');
                     message.channel.send(reply);
                 } else {
                     let item = new result_types[0]();
                     message.channel.send(core.tag(author) + ', created an item\n' + item.name + ': ' + item.desc);
-                    players[author].inventory.items.push(item);
+                    room.items.push(item);
                 }
             } else if(type === 'prop') {
-                
+                let criterion = args.join(' ') || '';
+                let result_types = Object.keys(itemtypes.typesByName).filter(name => (name.startsWith(criterion))).map(itemtypes.typesByName[name]);
+                if(result_types.length === 0) {
+                    message.channel.send(core.tag(author) + ', prop not found');
+                } else if(result_types.length > 1) {
+                    let reply = core.tag(author) + ', ' + results.length + ' results found. Create which prop?';
+                    reply += '\n' + result_types.map(type => ('`' + type.name + '`' + ': ' + type.desc)).join('\n');
+                    message.channel.send(reply);
+                } else {
+                    let item = new result_types[0]();
+                    message.channel.send(core.tag(author) + ', created a prop\n' + item.name + ': ' + item.desc);
+                    room.props.push(item);
+                }
             } else if(type === 'mob') {
                 let criterion = args.join(' ') || '';
-                let result_types = [];
-                for(let name in mobtypes.typesByName) {
-                    if(name.startsWith(criterion)) {
-                        result_types.push(mobtypes.typesByName[name]);
-                    }
-                }
+                let result_types = Object.keys(mobtypes.typesByName).filter(name => (name.startsWith(criterion))).map(name => mobtypes.typesByName[name]);
                 if(result_types.length === 0) {
                     message.channel.send(core.tag(author) + ', mob not found');
                 } else if(result_types.length > 1) {
-                    let reply = core.tag(author) + ', ' + results.length + ' create which mob?';
+                    let reply = core.tag(author) + ', ' + results.length + ' results found. Create which mob?';
                     reply += '\n' + result_types.map(type => ('`' + type.name + '`' + ': ' + type.desc)).join('\n');
                     message.channel.send(reply);
                 } else {
                     let mob = new result_types[0]();
                     message.channel.send(core.tag(author) + ', created a mob\n' + mob.name + ': ' + mob.desc);
-                    getRoom(message.author.id).mobs.push(mob);
+                    room.mobs.push(mob);
                 }
             }
             
