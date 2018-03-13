@@ -161,7 +161,7 @@ me.on('message', function(message) {
     let input = message.content;
     
     console.log(input);
-    let parts = input.split(' ').map(function(s) { return s.trim(); });
+    let parts = input.split(' ').map(function(s) { return s.trim(); }).join('\n').split('\n');
     if(hooks.intercept(message)) {
         console.log('Message intercepted by hook');
         return;
