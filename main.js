@@ -4,12 +4,12 @@ const core = require('./core.js');
 const CONFIG = require('../config.json');
 
 const cerebrum = require('./cerebrum.js');
-
-const party = require('./party.js');
 const rpg = require('./rpg.js');
+const party = require('./party.js');
 const transdata = require('./transdata.js');
+const rubbish = require('./rubbish.js');
 
-const COMMAND_MODULES = [cerebrum, rpg, party, transdata];
+const COMMAND_MODULES = [cerebrum, rpg, party, transdata, rubbish];
 
 const hooks = require('./hooks.js');
 
