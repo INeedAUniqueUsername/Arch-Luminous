@@ -395,9 +395,23 @@ module.exports = {
         inventory: function(message, args) {
             let author = message.author.id;
             
-            let items = players[author].inventory.items;
-            let reply = core.tag(author) + ', ' + items.length + ' items: ' + items.map(item => ('`' + item.name + '`')).join(', ');
-            message.channel.send(reply);
+            let target = args.join(' ').trim();
+            if(target.length > 0) {
+                let room = getRoom(author);
+                let characters = room.players.map(id => players[id]).concat(room.mobs);
+                results = characters.filter(character => (character.name.startsWith(target)));
+                reply = core.tag(author) + ', ' + results.length + ' results found.';
+                reply += '\n' + results.map(
+                    character => (character.name + ': ' + character.inventory.items.map(
+                        item => ('`' + item.name + '`')).join(', '))
+                ).join('\n');
+                message.channel.send(reply);
+            } else {
+                let items = players[author].inventory.items;
+                let reply = core.tag(author) + ', ' + items.length + ' items: ' + items.map(item => ('`' + item.name + '`')).join(', ');
+                message.channel.send(reply);
+            }
+        },
         },
         use: function(message, args) {
             let author = message.author.id;
