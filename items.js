@@ -1,7 +1,6 @@
 const hooks = require('./hooks.js');
 const core = require('./core.js');
 
-
 const types = {
     example: function() {
         //Auto-assigned at program start
@@ -257,6 +256,16 @@ const types = {
             sides: [1, 2, 3, 4, 5, 6],
             roll: function() { return this.sides[Math.floor(Math.random() * this.sides.length)]; }
         };
+        return this;
+    },
+    torchfork: function() {
+        this.name = 'Torchfork';
+        this.desc = 'A combined torch and pitchfork, with the utility of both and the convenience of neither. Perfect for all your angry needs.';
+        this.weapon = {
+            baseDamage: 9
+        };
+        this.use = {};
+        this.data = {};
         return this;
     }
 };
