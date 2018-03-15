@@ -34,7 +34,7 @@ const types = {
         this.listeners = {
             update_room: function(room, data) {
                 if(Math.random() < 0.04) {
-                    room.announce('The stuporcomputer unfreezes for a second only to freeze yet again.')
+                    room.announce('The stuporcomputer unfreezes for a second only to freeze yet again.');
                 }
             }
         };

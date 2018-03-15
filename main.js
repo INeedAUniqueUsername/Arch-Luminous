@@ -199,6 +199,11 @@ let read = function(message) {
 me.on('message', function(message) {
     if(asleep)
         return;
+    /*
+    message.channel.send = function(content) {
+        console.log('Message: ' + content);
+    }
+    */
     read(message);
 });
 me.login(CONFIG.token);
