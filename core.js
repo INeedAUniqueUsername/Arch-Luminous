@@ -50,4 +50,13 @@ module.exports = {
             return  p;
         }, {a: ['']}).a;
     }
-}
+};
+Array.prototype.remove = function(target) {
+    let index = this.indexOf(target);
+    if(index) {
+        this.splice(index, 1);
+        return true;
+    } else {
+        return false;
+    }
+};
