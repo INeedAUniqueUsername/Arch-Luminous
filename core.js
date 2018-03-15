@@ -59,4 +59,22 @@ Array.prototype.remove = function(target) {
     } else {
         return false;
     }
+};};
+Array.prototype.random = function() {
+    return this[Math.floor(Math.random() * this.length)];
 };
+/*Finds the first item that satisfies criterion and runs a function on it. If no matching item is found, then it runs a fallback function
+*/
+Array.prototype.findThen = function(criterion, then, otherwise) {
+    let match = this.find(item => criterion(item));
+    //Found a match; run the function on it
+    if(match) {
+        //Run the fallback function
+        return then(match);
+    } else {
+        return otherwise();
+    }
+};
+Array.prototype.findNth = function(n, criterion) {
+    return this.filter(item => criterion(item))[n];
+}
