@@ -10,7 +10,20 @@ const bases = {
         };
         this.listeners = {};
     }
-}
+};
+const actionText = function() {
+    //'`character1` verb1 `character2` verb2 `character3` verb3 ...'
+    let result = '`' + arguments[0] + '`';
+    
+    for(let i = 1; i < arguments.length; i++) {
+        if(i%2 === 0) {
+            result += ' ' + '`' + arguments[i] + '`';
+        } else {
+            result += ' ' + arguments[i];
+        }
+    }
+    return result;
+};
 const types = {
     example: function() {
         bases.standard.call(this);
