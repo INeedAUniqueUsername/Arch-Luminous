@@ -34,14 +34,7 @@ const types = {
         this.listeners = {
             update_room: function(room, data) {
                 if(Math.random() < 0.04) {
-                    let roomPlayers = room.players;
-                    for(let i = 0; i < roomPlayers.length; i++) {
-                        let id = roomPlayers[i];
-                        let player = data.players[id];
-                        let channel = player.channel;
-                        if(channel) channel.send('The stuporcomputer unfreezes for a second only to freeze yet again.');
-                        
-                    }
+                    room.announce('The stuporcomputer unfreezes for a second only to freeze yet again.')
                 }
             }
         };
