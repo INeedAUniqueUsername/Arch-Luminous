@@ -57,6 +57,15 @@ module.exports = {
     ready: function() {
         console.log('RPG online');
         rooms = core.load(rooms, ROOMS_FILE);
+        
+        [
+            LISTENERS_MODULE,
+            PLAYERS_MODULE,
+            ROOMS_MODULE,
+            itemtypes,
+            mobtypes
+        ].filter(module => module.ready).forEach(module => module.ready());
+        
         //TODO: Make sure that loaded items preserve their functions such as 'use' actions
         //inventories = core.load(inventories, INVENTORIES_FILE);
         //players = core.load(players, PLAYERS_FILE);
