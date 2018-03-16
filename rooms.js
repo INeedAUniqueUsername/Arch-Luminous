@@ -4,6 +4,9 @@ const itemtypes = require('./items.js');
 const mobtypes = require('./mobs.js');
 const players = require('./players').players;
 
+const stepsPerSecond = 3;
+const ticksPerStep = 1000/stepsPerSecond;
+
 const Room = function(source) {
     this.name = source.name || 'name';
     this.desc = source.desc || 'desc';
@@ -19,14 +22,11 @@ const Room = function(source) {
     if(source.listeners) Object.keys(source.listeners).forEach(key => this.listeners[key] = source.listeners[key].bind(this));
     
     let me = this;
-    this.update = function() {
-        //console.log('update()');
-        /*
-        for(let id in players) {
-            let channel = players[id].channel;
-            if(channel) channel.send('Time passes');
-        }
-        */
+    
+    this.update = source.update || function() { this.updateObjects(); };
+    this.update.bind(this);
+    
+    this.updateObjects = function() {
         let objects = this.mobs.concat(this.props).concat(this.items);
         objects.forEach(object => {
             if(!object.listeners) {
@@ -40,7 +40,7 @@ const Room = function(source) {
                 });
             }
         });
-    };
+    }.bind(this);
     this.updateTimer = null;
     this.updateStepsLeft = 0;
     this.updatePauseCallback = function() {};
@@ -50,7 +50,7 @@ const Room = function(source) {
         this.update();
         this.updateStepsLeft--;
         //console.log('updateStepsLeft: ' + this.updateStepsLeft);
-        if(this.updateStepsLeft%5 === 0) {
+        if(this.updateStepsLeft%(stepsPerSecond*2) === 0) {
             this.players.forEach(playerId => {
                 players[playerId].flushMessages();
             });
@@ -58,7 +58,7 @@ const Room = function(source) {
         
         if(this.updateStepsLeft > 0) {
             //console.log('Setting up next update timer');
-            this.updateTimer = setTimeout(function() { this.updateContinuous(); }.bind(this), 200);
+            this.updateTimer = setTimeout(function() { this.updateContinuous(); }.bind(this), ticksPerStep);
             //console.log('Set up next update timer');
         } else {
             this.updatePauseCallback();
@@ -71,7 +71,7 @@ const Room = function(source) {
             this.updateStepsLeft = minSteps;
             if(!this.updateTimer) {
                 //console.log('Setting up next update timer');
-                this.updateTimer = setTimeout(function() { this.updateContinuous(); }.bind(this), 200);
+                this.updateTimer = setTimeout(function() { this.updateContinuous(); }.bind(this), ticksPerStep);
             }
         }
     }.bind(this);
@@ -79,6 +79,10 @@ const Room = function(source) {
         this.players.map(id => players[id]).forEach(player => {
             player.messages.push(text);
         });
+        //If we are paused, then we flush messages immediately
+        if(this.updateStepsLeft === 0) {
+            this.flushMessages();
+        }
     }.bind(this);
     this.flushMessages = function() {
         this.players.forEach(playerId => players[playerId].flushMessages());
