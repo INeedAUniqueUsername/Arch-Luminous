@@ -28,6 +28,11 @@ const Player = function(id, name, channel) {
     this.channel = channel;
     
     this.messages = [];
+    this.addMessage = function() {
+        for(let i = 0; i < arguments.length; i++) {
+            messages.push(arguments[i]);
+        }
+    }.bind(this);
     this.flushMessages = function() {
         if(this.messages.length > 0) {
             this.channel.send('.\n' + this.messages.join('\n'));
