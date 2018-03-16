@@ -192,6 +192,23 @@ module.exports = {
             }
             message.channel.send(core.tag(author) + ', I can\'t find that item');
         },
+        drop: function(message, args) {
+            let author = message.author.id;
+            let player = players[author];
+            let room = getRoom(author);
+            let items = player.inventory.items;
+            let target = args.join(' ');
+            for(let i = 0; i < items.length; i++) {
+                let item = items[i];
+                if(item.name === target) {
+                    items.splice(i, 1);
+                    room.items.push(item);
+                    message.channel.send(core.tag(author) + ', you dropped ' + item.name);
+                    return;
+                }
+            }
+            message.channel.send(core.tag(author) + ', I can\'t find that item');
+        },
         go: function(message, args) {
             let author = message.author.id;
             let exit = args.join(' ');
