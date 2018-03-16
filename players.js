@@ -5,6 +5,7 @@ const mobtypes = require('./mobs.js');
 const listeners = require('./listeners.js').listeners;
 
 const Player = function(id, name, channel) {
+    
     this.id = id;
     this.active = true;
     this.name = name;
@@ -15,8 +16,11 @@ const Player = function(id, name, channel) {
     };
     this.stats = {
         health: 60,
-        baseDamage: 100
+        baseDamage: 10
     }
+    this.rollDamage = function(baseDamage) {
+        return Math.floor(baseDamage * (1 + Math.random()));
+    };
     this.inventory = {
         items: [
                     new itemtypes.types.die_std(),
@@ -48,4 +52,4 @@ const players_storage = {
 module.exports = {
     Player: Player,
     players: players
-}
+};
