@@ -24,17 +24,32 @@ R!create mob mob boss
 R!wait
 */
 
-//Stores character information for players who run multiple characters
-let characters_other = {
-    playerId: []    //List of additional player objects associated with the player
-};
+const stepsPerSecond = 3;
+
 const prefix = 'R!';
 const helpText = function(name, desc) {
     return '`' + prefix + name + '`: ' + desc;
-}
+};
+const actionText = function() {
+    //'`character1` verb1 `character2` verb2 `character3` verb3 ...'
+    let result = '`' + arguments[0] + '`';
+    
+    for(let i = 1; i < arguments.length; i++) {
+        if(i%2 === 0) {
+            result += ' ' + '`' + arguments[i] + '`';
+        } else {
+            result += ' ' + arguments[i];
+        }
+    }
+    return result;
+};
+const itemString = function(items) {
+    let names = items.map(item => '`' + item.name + '`');
+    let last = names.pop();
+    return names.join(', ') + ', and ' + last;
+};
 const getRoom = function(author) {
     return rooms[players[author].location];
-}
 module.exports = {
     desc: 'Roleplaying Module',
     //desc: 'ArchROCK (Realm of Chaos and Kleptomania) Module',
