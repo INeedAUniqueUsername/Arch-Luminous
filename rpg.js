@@ -129,20 +129,23 @@ module.exports = {
             let characters = room.players.map(playerId => players[playerId]).concat(room.mobs);
             let character = characters.find(character => (character.name === target));
             if(character) {
-                character.stats.health -= player.stats.baseDamage;
-                message.channel.send(core.tag(author) + ', you attack ' + character.name + ' for ' + player.stats.baseDamage + ' damage.');
-                if(character.stats.health < 1) {
-                    let index;
-                    if(index = room.mobs.indexOf(character)) {
-                        room.mobs.splice(index, 1);
-                    } else if(index = room.players.indexOf(character.id)) {
-                        room.players.splice(index, 1);
-                    }
-                    message.channel.send(character.name + ' dies from the attack!');
+                let item = player.inventory.items.find(item => item.weapon);
+                let points = player.rollDamage(player.stats.baseDamage);
+                if(item && item.weapon.baseDamage) {
+                    points = item.weapon.baseDamage * (1 + Math.random());
+                    room.announce(actionText(player.name, 'attacks', character.name, 'with', item.name));
+                    //message.channel.send(core.tag(author) + ', you attack ' + character.name + ' with ' + '`' + item.name + '`');
+                } else {
+                    //message.channel.send(core.tag(author) + ', you attack ' + character.name);
+                    room.announce(actionText(player.name, 'attacks', character.name));
                 }
+                
+                //console.log('Character');console.log(character);
+                character.listeners.damage(points, room);
             } else {
                 message.channel.send(core.tag(author) + ', I cannot find that character.');
             }
+            player.flushMessages();
         },
         equip: function(message, args) {
             
