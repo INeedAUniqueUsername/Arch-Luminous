@@ -272,11 +272,18 @@ module.exports = {
             room.flushMessages();
         },
         wait: function(message, args) {
-            let steps = parseInt(args[0]) || 50;
-            let room = getRoom(message.author.id);
+            let steps = parseInt(args[0]) || stepsPerSecond;
+            let author = message.author.id;
+            let room = getRoom(author);
+            let player = players[author];
             room.setUpdating.call(room, steps);
-            message.channel.send('Time unpaused');
-            room.updatePauseCallback = () => { message.channel.send('Time paused'); };
+            player.messages.push('You wait for ' + steps/stepsPerSecond + ' seconds')
+            room.announce('Time unpaused');
+            room.flushMessages();
+            room.updatePauseCallback = () => {
+                room.announce('Time paused');
+                room.flushMessages();
+            };
         },
         
         create: function(message, args) {
