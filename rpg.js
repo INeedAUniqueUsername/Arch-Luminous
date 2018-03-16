@@ -99,13 +99,19 @@ module.exports = {
                 }
                 message.channel.send(core.tag(author) + ', logged in as new player.');
                 
-                players[author] = new Player(author, name, message.channel || message.author);
-                rooms.start.players.push(author);
+                let player = new Player(author, name, message.channel || message.author);
+                players[author] = player;
+                let room = rooms.start;
+                room.players.push(author);
+                module.exports.commands.look(message);
+                room.announce(actionText(player.name, 'materializes into the room out of nowhere.'));
             } else if(player.active) {
                 message.channel.send(core.tag(author) + ', you are already logged in.');
             } else {
                 message.channel.send(core.tag(author) + ', logged in as returning player.');
                 player.active = true;
+                module.exports.commands.look(message);
+                rooms[player.location].announce(actionText(player.name, 'regains consciousness.'));
             }
         },
         logout: function(message, args) {
