@@ -41,6 +41,10 @@ const Player = function(id, name, channel) {
     }.bind(this);
 };
 let players = {};
+//Stores character information for players who run multiple characters
+const players_storage = {
+    playerId: []    //List of additional player objects associated with the player
+};
 module.exports = {
     Player: Player,
     players: players
