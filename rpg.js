@@ -228,6 +228,20 @@ module.exports = {
                 message.channel.send(core.tag(author) + ', you wanted to go where?');
             }
         },
+        warp: function(message, args) {
+            let author = message.author.id;
+            let room = getRoom(author);
+            let destination = args.join(' ');
+            let destination_room = rooms[destination];
+            if(destination_room) {
+                room.players.splice(room.players.indexOf(author), 1);
+                destination_room.players.push(author);
+                players[author].location = destination;
+                module.exports.commands.look(message);
+            } else {
+                message.channel.send(core.tag(author) + ', you wanted to go where?');
+            }
+        },
         say: function(message, args) {
             let text = args.join(' ');
             let author = message.author.id;
