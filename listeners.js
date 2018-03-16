@@ -11,11 +11,11 @@ const listeners = {
         //console.log('Source: ' + source.id);
         this.messages.push(source.name + ' says: ' + text);
     },
-    default_damage: function(points) {
+    default_damage: function(points, room) {
         //console.log('POINTS');
         //console.log(points);
         this.stats.health -= points;
-        this.messages.push('`' + this.name + '`' + ' takes ' + points + ' points of damage');
+        room.announce('`' + this.name + '`' + ' takes ' + points + ' points of damage');
         if(this.stats.health < 1) {
             //this.channel.send(this.name + ' dies from the attack!');
         }
