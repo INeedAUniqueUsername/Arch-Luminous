@@ -247,12 +247,17 @@ module.exports = {
             let author = message.author.id;
             let source = players[author];
             let room = getRoom(author);
+            /*
             room.players.map(playerId => players[playerId]).forEach(player => {
                 let say_room = player.listeners.say_room;
                 if(say_room) {
-                    say_room.call(player, source, text);
+                    say_room(source, text);
                 }
             });
+            */
+            room.announce(actionText(source.name, 'says ' + text));
+            let player = players[author];
+            room.listeners.say(player, text);
             
             player.inventory.items.forEach(item => {
                 if(!item.listeners) {
@@ -264,6 +269,7 @@ module.exports = {
                     item.listeners.say_owner.call(item, message, text);
                 }
             });
+            room.flushMessages();
         },
         wait: function(message, args) {
             let steps = parseInt(args[0]) || 50;
