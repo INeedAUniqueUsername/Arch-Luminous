@@ -23,7 +23,7 @@ module.exports = {
     load: function(obj, path) {
         try {
             let file = require(path);
-            console.log(Object.assign(file, obj));
+            //console.log(Object.assign(file, obj));
             return Object.assign(file, obj);
         } catch(e) {
             console.log(e);
@@ -59,7 +59,10 @@ Array.prototype.remove = function(target) {
     } else {
         return false;
     }
-};};
+};
+Array.prototype.clone = function() {
+    return this.slice(0);
+}
 Array.prototype.random = function() {
     return this[Math.floor(Math.random() * this.length)];
 };
@@ -71,10 +74,53 @@ Array.prototype.findThen = function(criterion, then, otherwise) {
     if(match) {
         //Run the fallback function
         return then(match);
-    } else {
+    } else if(otherwise) {
         return otherwise();
     }
 };
 Array.prototype.findNth = function(n, criterion) {
     return this.filter(item => criterion(item))[n];
+};
+Array.prototype.shuffle = function() {
+    let result = this.clone();
+    for(let i = result.length-1; i > -1; i--) {
+        let swap_i = Math.floor(Math.random() * i);
+        [result[i], result[swap_i]] = [result[swap_i], result[i]];
+    }
+    return result;
+};
+Array.prototype.at = function(index) {
+    if(index) {
+        return this[index];
+    }
 }
+Array.prototype.choose = function(count) {
+    if(count) {
+        return this.shuffle().slice(0, count);
+    } else {
+        return this[Math.floor(Math.random() * this.length)];
+    }
+}
+Array.prototype.pick = function(count) {
+    if(count) {
+        let result = [];
+        for(let i = 0; i < count; i++) {
+            let random_i = Math.floor(Math.random() * this.length);
+            result.push(this[random_i]);
+            this.splice(random_i, 1);
+        }
+        return result;
+    } else {
+        let random_i = Math.floor(Math.random() * this.length);
+        let result = this[random_i];
+        this.splice(random_i, 1);
+        return result;
+    }
+}
+Math.range = function(min, max) {
+    if(max) {
+        return min + Math.floor(Math.random() * (1 + max));
+    } else {
+        return Math.floor(Math.random() * (1 + min));
+    }
+};
