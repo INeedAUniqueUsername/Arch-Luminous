@@ -50,6 +50,7 @@ const itemString = function(items) {
 };
 const getRoom = function(author) {
     return rooms[players[author].location];
+};
 module.exports = {
     desc: 'Roleplaying Module',
     //desc: 'ArchROCK (Realm of Chaos and Kleptomania) Module',
@@ -139,13 +140,13 @@ module.exports = {
                     //message.channel.send(core.tag(author) + ', you attack ' + character.name);
                     room.announce(actionText(player.name, 'attacks', character.name));
                 }
-                
                 //console.log('Character');console.log(character);
-                character.listeners.damage(points, room);
+                character.listeners.attack(room, player, points);
             } else {
                 message.channel.send(core.tag(author) + ', I cannot find that character.');
             }
             player.flushMessages();
+            room.setUpdating(stepsPerSecond);
         },
         equip: function(message, args) {
             
@@ -192,22 +193,53 @@ module.exports = {
             }
             message.channel.send(core.tag(author) + ', I can\'t find that item');
         },
+        give: function(message, args) {
+            let author = message.author.id;
+            let player = players[author];
+            let room = getRoom(author);
+            
+            let nextLineIndex = args.findIndex(item => item.startsWith('\n'));
+            if(nextLineIndex === -1) {
+                message.channel.send(`${core.tag(author)}, enter item name on the second line`);
+                return;
+            }
+            
+            let mobName = args.slice(0, nextLineIndex).join(' ');
+            let mob = room.mobs.find(mob => (mob.name === mobName));
+            
+            args = args.slice(nextLineIndex);
+            args[0] = args[0].replace('\n', '');
+            let itemName = args.join(' ');
+            let item = player.inventory.items.find(item => (item.name === itemName));
+            if(mob) {
+                let give = mob.listeners.give;
+                if(give) {
+                    if(item) {
+                        give(room, player, item);
+                    } else {
+                        message.channel.send(`${core.tag(author)}, I cannot find that item`);
+                    }
+                } else {
+                    console.log(`Warning: ${mob.name}.listeners.give is undefined`);
+                    message.channel.send(`${core.tag(author)}, nothing happens.`);
+                }
+            } else {
+                message.channel.send(`${core.tag(author)}, I cannot find that mob`);
+            }
+        },
+        take: function(message, args) {},
         drop: function(message, args) {
             let author = message.author.id;
             let player = players[author];
             let room = getRoom(author);
-            let items = player.inventory.items;
-            let target = args.join(' ');
-            for(let i = 0; i < items.length; i++) {
-                let item = items[i];
-                if(item.name === target) {
-                    items.splice(i, 1);
-                    room.items.push(item);
-                    message.channel.send(core.tag(author) + ', you dropped ' + item.name);
-                    return;
-                }
+            
+            let targetItem = args.join(' ');
+            let item = player.inventory.items.find(item => (item.name === targetItem));
+            if(item) {
+                message.channel.send(core.tag(author) + ', you dropped ' + item.name);
+            } else {
+                message.channel.send(core.tag(author) + ', I can\'t find that item');
             }
-            message.channel.send(core.tag(author) + ', I can\'t find that item');
         },
         go: function(message, args) {
             let author = message.author.id;
@@ -266,17 +298,51 @@ module.exports = {
                     console.log('Warning: ' + item.name + '.listeners.say_owner is undefined');
                 } else {
                     console.log(item.name + '.listeners.say_owner called');
-                    item.listeners.say_owner.call(item, message, text);
+                    item.listeners.say_owner(message, text);
                 }
             });
             room.flushMessages();
+        },
+        talk: function(message, args) {
+            let input = args.join(' ');
+            let author = message.author.id;
+            let source = players[author];
+            let room = getRoom(author);
+            
+            let nextLineIndex = args.findIndex(item => item.startsWith('\n'));
+            /*
+            if(nextLineIndex === -1) {
+                message.channel.send(`${core.tag(author)}, enter talk text on the second line`);
+                return;
+            }
+            */
+            //Assume that we are talking to the mob without saying anything
+            if(nextLineIndex === -1) {
+                nextLineIndex = args.length;
+            }
+            let subject = args.slice(0, nextLineIndex).join(' ');
+            args = args.slice(nextLineIndex);
+            args[0] = args[0].replace('\n', '');
+            let text = args.join(' ');
+            
+            let mob = room.mobs.find(mob => (mob.name === subject));
+            if(mob) {
+                let talk = mob.listeners.talk;
+                if(talk) {
+                    talk(room, source, text);
+                } else {
+                    console.log(`Warning: ${mob.name}.listeners.talk is undefined`);
+                }
+            } else {
+                message.channel.send(`${core.tag(author)}, I cannot find that mob`);
+            }
         },
         wait: function(message, args) {
             let steps = parseInt(args[0]) || stepsPerSecond;
             let author = message.author.id;
             let room = getRoom(author);
             let player = players[author];
-            room.setUpdating.call(room, steps);
+            room.setUpdating(steps);
             player.messages.push('You wait for ' + steps/stepsPerSecond + ' seconds')
             room.announce('Time unpaused');
             room.flushMessages();
@@ -448,5 +514,6 @@ module.exports = {
         examine: helpText('examine <name>...', 'Gives you the description of the item with the specified name'),
         inventory: helpText('inventory', 'Lists all the items in your inventory'),
         use: helpText('use <name>... <action>', 'Use the specified item for the specified action')
-    }
-}
+    },
+    stepsPerSecond: stepsPerSecond
+};

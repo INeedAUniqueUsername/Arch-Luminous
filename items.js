@@ -170,7 +170,7 @@ const types = {
                 if(text === 'Begone!') {
                     message.channel.send('After a flash of light, you find yourself polymorphed into a polygon.');
                 }
-            }
+            }.bind(this)
         };
         return this;
     },

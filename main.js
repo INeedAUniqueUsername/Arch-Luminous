@@ -116,8 +116,8 @@ const run = function(message, input, command_module) {
         }
     } while(active);
     */
-    //Get rid of the first newline
-    input = input.replace('\n', ' ').split(' ');
+    //Prepend newlines with space in order to split properly
+    input = input.replace('\n', ' \n').split(' ');
     let command = input.shift().toLowerCase();
     for(let alias in cerebrum.macros) {
         if(command === alias) {

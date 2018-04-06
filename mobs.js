@@ -1,16 +1,10 @@
 const hooks = require('./hooks.js');
 const core = require('./core.js');
 const itemtypes = require('./items.js');
+const rpg = require('./rpg.js');
 
-const bases = {
-    standard: function() {
-        //Standard base; initializes inventory and listeners to empty
-        this.inventory = {
-            items: []
-        };
-        this.listeners = {};
-    }
-};
+console.log("Steps per second: " + rpg.stepsPerSecond);
+
 const actionText = function() {
     //'`character1` verb1 `character2` verb2 `character3` verb3 ...'
     let result = '`' + arguments[0] + '`';
@@ -24,6 +18,48 @@ const actionText = function() {
     }
     return result;
 };
+const itemString = function(items) {
+    let names = items.map(item => '`' + item.name + '`');
+    let last = names.pop();
+    return names.join(', ') + ', and ' + last;
+};
+const joinLines = function() {
+    let result = [];
+    for(let i = 0; i < arguments.length; i++) {
+        result.push(arguments[i]);
+    }
+    return result.join(' ');
+}
+const bases = {
+    standard: function() {
+        //Standard base; initializes inventory and listeners to empty
+        this.inventory = {
+            items: []
+        };
+        this.rollDamage = function(baseDamage) {
+            return Math.floor(baseDamage * (1 + Math.random()));
+        }
+        this.listeners = {
+            attack: function(room, player, points) {
+                this.damage(points, room);
+            }.bind(this),
+            damage: function(points, room) {
+                this.stats.health -= points;
+                room.announce(actionText(this.name, 'takes ' + points + ' points of damage'));
+                if(this.stats.health < 1) {
+                    console.log(actionText);
+                    room.announce(actionText(this.name, 'dies from the attack!'));
+                    room.mobs.splice(room.mobs.indexOf(this), 1);
+                    
+                    if(this.inventory.items.length > 0) {
+                        this.inventory.items.forEach(item => room.items.push(item));
+                        room.announce(actionText(this.name, 'drops ' + itemString(this.inventory.items)));
+                    }
+                }
+            }.bind(this)
+        };
+    }
+};
 const types = {
     example: function() {
         bases.standard.call(this);
@@ -36,11 +72,69 @@ const types = {
         this.desc = 'example';
         return this;
     },
+    archrock_customs_officer: function() {
+        bases.standard.call(this);
+        this.name = 'ArchROCK Customs Officer';
+        this.desc = 'One of the few people who actually tries to do work at the ArchROCK Customs Office while everyone else is out to lunch indefinitely';
+        this.stats = {
+            health: 100,
+            baseDamage: 10
+        };
+        let talkStates = {
+            passport: 0,
+        }
+        this.talkState = {};
+        this.listeners.talk = function(room, source, text) {
+            switch(this.talkState[source.id]) {
+                case talkStates.passport:
+                    room.tell(source, actionText(this.name, 'says "Before I can let you out, I will need to check your passport."'));
+                    break;
+                default:
+                    room.tell(source, joinLines(
+                        actionText(this.name, 'says "Hello and welcome to ArchROCK! May I see your passport, please?"')
+                    ));
+                    this.talkState[source.id] = talkStates.passport;
+                    break;
+            }
+        }.bind(this);
+        
+        this.targetIdList = [];
+        this.listeners.attack = function(room, player, points) {
+            this.listeners.damage(points, room);
+            if(this.targetIdList.pushUnique(player.id)) {
+                room.announce(actionText(this.name, 'yells "Security!"'));
+            }
+        }.bind(this);
+        
+        this.attackTimer = 10;
+        this.listeners.update_room = function(room, data) {
+            if(this.targetIdList.length > 0) {
+                this.attackTimer--;
+                if(this.attackTimer === 0) {
+                    this.attackTimer = 10;
+                    let targetId = this.targetIdList.choose();
+                    if(targetId) {
+                        let player = data.players[targetId];
+                        let item = this.inventory.items.find(item => item.weapon);
+                        let damage = this.rollDamage(item ? item.weapon.baseDamage : this.stats.baseDamage);
+                        if(item) {
+                            room.announce(actionText(this.name, 'attacks', player.name, 'with a', item.name));
+                        } else {
+                            room.announce(actionText(this.name, 'punches', player.name, 'in the gut!'));
+                        }
+                        player.listeners.damage(damage, room);
+                    }
+                }
+            }
+        }.bind(this);
+        
+        return this;
+    },
     mob_boss: function() {
         bases.standard.call(this);
         this.name = 'mob boss';
         this.desc = 'This evil dude likes to create huge angry mobs just because he can!';
-        this.attackCooldown = 10;    //ms until next attack
+        this.attackCooldown = 10;    //turns until next attack
         this.emoteCooldown = 16;
         
         this.targetPlayerId = 0;
@@ -110,9 +204,8 @@ const types = {
                 }
             }
         }.bind(this);
-        let damage_base = this.listeners.damage;
-        this.listeners.damage = function(points, room) {
-            damage_base(points, room);
+        this.listeners.attack = function(room, player, points) {
+            this.listeners.damage(points, room);
             if(Math.random() < 0.8) {
                 room.announce(actionText(this.name, 'swears in pain.'));
             }
@@ -149,6 +242,45 @@ const types = {
         }.bind(this);
         return this;
     },
+    scry_gost: function() {
+        bases.standard.call(this);
+        
+        this.name = 'Scry Gost';
+        this.desc = 'Not to be confused with the Scary Ghost, this translucent pariah has a uniquely uncool aura mostly due to its totally pathetic diet of human souls.';
+        this.stats = {
+            health: 130,
+            baseDamage: 8
+        };
+        this.attackCooldown = 12;    //ms until next attack
+        this.targetPlayerId = 0;
+        this.listeners.update_room = function(room, data) {
+            this.attackCooldown--;
+            if(this.attackCooldown === 7 && Math.random() < 0.6) {
+                room.announce(actionText(this.name, 'twiddles its thumbs'));
+            } else if(this.attackCooldown < 1) {
+                this.attackCooldown = 12;
+                if(this.targetPlayerId || (this.targetPlayerId = room.players[Math.floor(Math.random() * room.players.length)])) {
+                    let damage = this.rollDamage(this.stats.baseDamage);
+                    let player = data.players[this.targetPlayerId];
+                    let text = [
+                        actionText(this.name, 'hisses violently at', player.name, 'and sprays its saliva everywhere!'),
+                        actionText(this.name, 'amasses a huge collection of sticks and stones and launches all of them to hit', player.name, 'in the face!'),
+                    ];
+                    room.announce(text.random());
+                    player.listeners.damage(damage, room);
+                    room.players.filter(playerId => (Math.random() < 0.5)).slice(0, );
+                }
+            }
+        }.bind(this);
+    },
+    scry_geist: function() {
+        
+    },
+    squat_captain: function() {
+        
+        this.name = 'SWAT Captain';
+        return this;
+    }
 };
 const typesByName = {};
 //Store each item type under its actual name
@@ -158,7 +290,7 @@ for(let key in types) {
     type.prototype.alias = key;
     type.prototype.type = type;
     
-    typesByName[type().name] = type;
+    typesByName[(new type()).name] = type;
 }
 module.exports.types = types;
 module.exports.typesByName = typesByName;

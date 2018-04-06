@@ -84,6 +84,13 @@ const Room = function(source) {
             this.flushMessages();
         }
     }.bind(this);
+    this.tell = function(target, text) {
+        target.addMessage(text);
+        //If we are paused, then we flush messages immediately
+        if(this.updateStepsLeft === 0) {
+            target.flushMessages();
+        }
+    }.bind(this);
     this.flushMessages = function() {
         this.players.forEach(playerId => players[playerId].flushMessages());
     }.bind(this);
@@ -113,6 +120,10 @@ let rooms = {
         name: 'ArchROCK Customs Office',
         desc: 'This is less of a Customs Office and more like a PvP arena where players go to farm EXP on idlers and where idlers go to get killed and over again.',
         players: [],
+        mobs: [
+            //A customs officer who needs the player's help to clean up all the discarded passports
+            new mobtypes.types.archrock_customs_officer()
+        ],
         props: [
             new itemtypes.types.stuporcomputer(),
             {
@@ -122,8 +133,8 @@ let rooms = {
         ],
         items: [
             {
-                name: 'customer',
-                desc: 'This citizen of ArchROCK follows local customs.'
+                name: 'passport',
+                desc: 'It\'s just a piece of paper with a name written on it. It\'s so useless that everyone just drops it, usually in the ArchROCK Customs Office, as soon as possible.'
             }
         ],
         exits: {
@@ -153,22 +164,32 @@ let rooms = {
     acropolis: new Room({
         name: 'Haunted Acropolis',
         desc: '',
+        mobs: [
+            //An archeologist named Nym who needs the player's help to clear the Haunted Acropolis using acronyms
+        ],
         listeners: {
             say: function(source, text) {
                 this.announce('The voice of `' + source.name + '` echoes around the walls of the Haunted Acropolis');
-                if(this.ghostTimer) {
+                if(this.ghostTimer > 0) {
                     return;
                 } else if(mob = this.mobs.find(mob => mob.type === mobtypes.types.scry_gost)) {
                     this.announce('The ' + mob.name + ' winces at ' + source.name + ' and becomes more agitated.');
                 } else {
                     this.announce('You hear a monstrous grumble from a mysterious, cosmic voice as an opaque, icy mist crawls in from the windows of the Haunted Acropolis');
-                    this.ghostTimer = setTimeout(function() {
-                        mob = new mobtypes.types.scry_gost();
-                        mob.targetPlayerId = source.id;
-                        this.announce('The icy mist suddenly bursts into hot steam, revealing a screaming, translucent figure. The Scry Gost has appeared!');
-                        this.mobs.push(mob);
-                    }.bind(this), 2000);
+                    this.ghostTimer = 12;
+                    this.ghostTargetId = source.id;
                 }
+            }
+        },
+        update: function() {
+            this.updateObjects();
+            
+            this.ghostTimer--;
+            if(this.ghostTimer === 0) {
+                let mob = new mobtypes.types.scry_gost();
+                mob.targetPlayerId = this.ghostTargetId;
+                this.announce('The icy mist violently condenses into a rain, revealing a screaming, translucent figure. The Scry Gost has appeared!');
+                this.mobs.push(mob);
             }
         }
     }),

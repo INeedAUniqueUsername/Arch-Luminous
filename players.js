@@ -34,7 +34,7 @@ const Player = function(id, name, channel) {
     this.messages = [];
     this.addMessage = function() {
         for(let i = 0; i < arguments.length; i++) {
-            messages.push(arguments[i]);
+            this.messages.push(arguments[i]);
         }
     }.bind(this);
     this.flushMessages = function() {
@@ -43,6 +43,19 @@ const Player = function(id, name, channel) {
         }
         this.messages = [];
     }.bind(this);
+    
+    this.addItem = function(item) {
+        this.inventory.items.add(item);
+    }.bind(this);
+    this.removeItem = function(item) {
+        let index = this.inventory.items.indexOf(item);
+        if(index > -1) {
+            this.inventory.items.splice(index, 1);
+            return true;
+        } else {
+            return false;
+        }
+    }
 };
 let players = {};
 //Stores character information for players who run multiple characters

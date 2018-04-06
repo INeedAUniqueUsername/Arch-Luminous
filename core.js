@@ -93,14 +93,14 @@ Array.prototype.at = function(index) {
     if(index) {
         return this[index];
     }
-}
+};
 Array.prototype.choose = function(count) {
     if(count) {
         return this.shuffle().slice(0, count);
     } else {
         return this[Math.floor(Math.random() * this.length)];
     }
-}
+};
 Array.prototype.pick = function(count) {
     if(count) {
         let result = [];
@@ -116,7 +116,15 @@ Array.prototype.pick = function(count) {
         this.splice(random_i, 1);
         return result;
     }
-}
+};
+Array.prototype.pushUnique = function(item) {
+    if(this.includes(item)) {
+        return false;
+    } else {
+        this.push(item);
+        return true;
+    }
+};
 Math.range = function(min, max) {
     if(max) {
         return min + Math.floor(Math.random() * (1 + max));
